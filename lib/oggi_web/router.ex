@@ -17,7 +17,8 @@ defmodule OggiWeb.Router do
   scope "/", OggiWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", PollLive.New
+    live "/p/:token", PollLive.Show
   end
 
   # Other scopes may use custom stacks.
