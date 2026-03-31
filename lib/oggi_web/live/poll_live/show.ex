@@ -110,65 +110,222 @@ defmodule OggiWeb.PollLive.Show do
     |> Enum.count(&(&1.slot_id == slot.id))
   end
 
+  defp slot_days(slots) do
+    slots
+    |> Enum.map(&NaiveDateTime.to_date(&1.start_time))
+    |> Enum.uniq()
+    |> Enum.sort(Date)
+  end
+
+  defp slot_times(slots) do
+    slots
+    |> Enum.map(&NaiveDateTime.to_time(&1.start_time))
+    |> Enum.uniq()
+    |> Enum.sort(Time)
+  end
+
+  defp find_slot(slots, day, time) do
+    Enum.find(slots, fn slot ->
+      NaiveDateTime.to_date(slot.start_time) == day &&
+        NaiveDateTime.to_time(slot.start_time) == time
+    end)
+  end
+
   defp format_time(naive_datetime) do
     Calendar.strftime(naive_datetime, "%H:%M")
   end
 
-  defp format_date(naive_datetime) do
-    Calendar.strftime(naive_datetime, "%a %b %d")
+  defp format_date_long(naive_datetime) do
+    Calendar.strftime(naive_datetime, "%d/%m/%Y")
+  end
+
+  defp organizer_name(poll) do
+    case Enum.find(poll.participants, & &1.is_organizer) do
+      nil -> "someone"
+      p -> p.name
+    end
+  end
+
+  defp slot_cell_class(slot, participant, poll) do
+    cond do
+      poll.status == :resolved && poll.resolved_slot_id == slot.id ->
+        "bg-success/15 cursor-default"
+
+      slot_unavailable?(slot, participant) ->
+        "bg-error/20 cursor-pointer hover:bg-error/30 active:scale-95"
+
+      participant != nil && poll.status == :open ->
+        "bg-base-100 cursor-pointer hover:bg-base-200 active:scale-95"
+
+      true ->
+        "bg-base-100"
+    end
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-2xl mx-auto mt-10">
-      <h1 class="text-2xl font-bold mb-2">{@poll.title}</h1>
-      <p :if={@poll.description} class="text-gray-600 mb-4">{@poll.description}</p>
-
-      <%!-- Admin: show participant link --%>
-      <div :if={@role == :admin} class="mb-6 p-3 bg-gray-50 rounded">
-        <p class="text-sm text-gray-500">Share this link with participants:</p>
-        <a href={"/p/#{@poll.participant_token}"} id="participant-link" class="text-blue-600 underline text-sm">
-          /p/{@poll.participant_token}
-        </a>
+    <div>
+      <%!-- Poll header --%>
+      <div class="mb-6">
+        <h1 class="text-2xl font-extrabold tracking-tight">{@poll.title}</h1>
+        <p class="text-sm text-base-content/50 mt-0.5">
+          {@poll.meeting_duration} min / organized by {organizer_name(@poll)}
+        </p>
       </div>
 
-      <%!-- Join form for participants who haven't joined yet --%>
-      <div :if={@role == :participant && is_nil(@participant) && @poll.status == :open} class="mb-6">
-        <.form for={@join_form} id="join-form" phx-submit="join" class="flex gap-2">
+      <%!-- Admin: share link card --%>
+      <div :if={@role == :admin && @poll.status == :open}
+           class="mb-6 p-4 bg-base-200 rounded-box">
+        <p class="text-sm font-medium mb-1.5">Share this with participants:</p>
+        <div class="flex items-center gap-2">
+          <code
+            id="participant-link"
+            class="flex-1 text-sm bg-base-100 px-3 py-2 rounded-field truncate select-all"
+          >
+            {url(~p"/p/#{@poll.participant_token}")}
+          </code>
+          <a href={"/p/#{@poll.participant_token}"} class="hidden">link</a>
+          <button
+            phx-click={JS.dispatch("phx:copy", to: "#participant-link")}
+            class="btn btn-sm btn-primary btn-soft"
+          >
+            <.icon name="hero-clipboard-document" class="size-4" />
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <%!-- Join form for new participants --%>
+      <div :if={@role == :participant && is_nil(@participant) && @poll.status == :open}
+           class="mb-6 p-6 bg-base-200 rounded-box text-center">
+        <p class="font-semibold mb-1">Jump in!</p>
+        <p class="text-sm text-base-content/60 mb-4">
+          Add your name, then tap the slots when you are NOT available.
+        </p>
+        <.form for={@join_form} id="join-form" phx-submit="join"
+               class="flex gap-2 max-w-xs mx-auto">
           <.input field={@join_form[:name]} placeholder="Your name" />
           <.button type="submit">Join</.button>
         </.form>
       </div>
 
-      <%!-- Resolved state --%>
-      <div :if={@poll.status in [:resolved, :closed]} class="mb-6 p-4 rounded bg-green-50">
-        <p :if={@poll.status == :resolved} class="font-semibold text-green-800">
-          resolved — {format_date(@poll.resolved_slot.start_time)} {format_time(@poll.resolved_slot.start_time)}-{format_time(@poll.resolved_slot.end_time)}
-        </p>
-        <p :if={@poll.status == :closed} class="font-semibold text-red-800">
-          No available slot found.
-        </p>
+      <%!-- Resolved / closed banner --%>
+      <div :if={@poll.status == :resolved}
+           class="mb-6 p-4 bg-success/10 border border-success/30 rounded-box">
+        <div class="flex items-center gap-2">
+          <.icon name="hero-check-circle-solid" class="size-6 text-success" />
+          <div>
+            <p class="font-bold text-success">We have a winner!</p>
+            <p class="text-sm">
+              {format_date_long(@poll.resolved_slot.start_time)}
+              — {format_time(@poll.resolved_slot.start_time)}
+              to {format_time(@poll.resolved_slot.end_time)}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <%!-- Slot grid --%>
-      <div class="space-y-2">
+      <div :if={@poll.status == :closed && is_nil(@poll.resolved_slot_id)}
+           class="mb-6 p-4 bg-error/10 border border-error/30 rounded-box">
+        <div class="flex items-center gap-2">
+          <.icon name="hero-x-circle-solid" class="size-6 text-error" />
+          <p class="font-bold text-error">No available slot found. Oggi proprio no!</p>
+        </div>
+      </div>
+
+      <%!-- Participant instruction --%>
+      <p :if={@participant && @poll.status == :open}
+         class="mb-3 text-sm text-base-content/60">
+        Tap the slots when you <strong>can't</strong> make it.
+        Red = you are busy.
+      </p>
+
+      <%!-- Calendar grid --%>
+      <div class="overflow-x-auto -mx-4 px-4">
         <div
-          :for={slot <- Enum.sort_by(@poll.slots, & &1.start_time, NaiveDateTime)}
-          id={"slot-#{slot.id}"}
-          phx-click={if @participant && @poll.status == :open, do: "toggle_slot"}
-          phx-value-slot-id={slot.id}
-          class={[
-            "p-3 rounded border flex justify-between items-center",
-            if(@participant && @poll.status == :open, do: "cursor-pointer hover:bg-gray-50", else: ""),
-            if(slot_unavailable?(slot, @participant), do: "unavailable bg-red-50 border-red-300", else: "bg-white")
-          ]}
+          class="inline-grid gap-px bg-base-300 rounded-box overflow-hidden border border-base-300"
+          style={"grid-template-columns: auto repeat(#{length(slot_days(@poll.slots))}, minmax(5rem, 1fr));"}
         >
-          <span class="font-mono">
-            {format_date(slot.start_time)} {format_time(slot.start_time)}-{format_time(slot.end_time)}
-          </span>
-          <span :if={@role == :admin} class="text-sm text-gray-500">
-            {unavailability_count(slot, @poll)} unavailable
+          <%!-- Header row: empty corner + day labels --%>
+          <div class="bg-base-200 px-2 py-2.5 text-xs font-medium text-base-content/40 sticky left-0 z-10">
+          </div>
+          <div
+            :for={day <- slot_days(@poll.slots)}
+            class="bg-base-200 px-2 py-2.5 text-center"
+          >
+            <div class="text-xs font-medium text-base-content/50">
+              {Calendar.strftime(day, "%a")}
+            </div>
+            <div class="text-sm font-bold">
+              {Calendar.strftime(day, "%d/%m")}
+            </div>
+          </div>
+
+          <%!-- Data rows: time label + slot cells --%>
+          <%= for time <- slot_times(@poll.slots) do %>
+            <div class="bg-base-100 px-2 py-3 text-xs font-mono text-base-content/50
+                        flex items-center sticky left-0 z-10">
+              {Calendar.strftime(time, "%H:%M")}
+            </div>
+            <%= for day <- slot_days(@poll.slots) do %>
+              <%= if slot = find_slot(@poll.slots, day, time) do %>
+                <div
+                  id={"slot-#{slot.id}"}
+                  phx-click={if @participant && @poll.status == :open, do: "toggle_slot"}
+                  phx-value-slot-id={slot.id}
+                  class={[
+                    "h-full min-h-[2.75rem] flex items-center justify-center transition-colors",
+                    slot_cell_class(slot, @participant, @poll)
+                  ]}
+                >
+                  <span :if={@role == :admin && unavailability_count(slot, @poll) > 0}
+                        class="text-xs font-bold opacity-70">
+                    {unavailability_count(slot, @poll)}
+                  </span>
+                  <.icon
+                    :if={@poll.status == :resolved && @poll.resolved_slot_id == slot.id}
+                    name="hero-star-solid"
+                    class="size-5 text-success"
+                  />
+                </div>
+              <% else %>
+                <div class="bg-base-200/50 min-h-[2.75rem]"></div>
+              <% end %>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+
+      <%!-- Legend --%>
+      <div class="mt-4 flex flex-wrap gap-4 text-xs text-base-content/50">
+        <div class="flex items-center gap-1.5">
+          <span class="inline-block w-3 h-3 rounded-sm bg-base-100 border border-base-300"></span>
+          Available
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="inline-block w-3 h-3 rounded-sm bg-error/20 border border-error/40"></span>
+          You can't
+        </div>
+        <div :if={@role == :admin} class="flex items-center gap-1.5">
+          <span class="inline-block w-3 h-3 rounded-sm bg-error/40 border border-error/60"></span>
+          Others can't (count shown)
+        </div>
+        <div :if={@poll.status == :resolved} class="flex items-center gap-1.5">
+          <span class="inline-block w-3 h-3 rounded-sm bg-success/20 border border-success/40"></span>
+          Winner
+        </div>
+      </div>
+
+      <%!-- Participants list --%>
+      <div :if={length(@poll.participants) > 0} class="mt-6">
+        <h2 class="text-sm font-semibold mb-2 text-base-content/60">
+          Participants ({length(@poll.participants)})
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          <span :for={p <- @poll.participants} class="badge badge-lg badge-soft">
+            {p.name}
+            <span :if={p.is_organizer} class="text-xs text-primary ml-0.5">(organizer)</span>
           </span>
         </div>
       </div>
@@ -178,9 +335,11 @@ defmodule OggiWeb.PollLive.Show do
         :if={@role == :admin && @poll.status == :open}
         id="close-poll"
         phx-click="close_poll"
-        class="mt-6 w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
+        data-confirm="This will find the best slot and close the poll. Proceed?"
+        class="mt-8 btn btn-error btn-soft w-full"
       >
-        Close poll & find best slot
+        <.icon name="hero-lock-closed" class="size-4" />
+        Close poll and find the best slot
       </button>
     </div>
     """

@@ -46,6 +46,12 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+// Copy to clipboard for share links
+window.addEventListener("phx:copy", (event) => {
+  const text = event.target.innerText;
+  navigator.clipboard.writeText(text);
+})
+
 // The lines below enable quality of life phoenix_live_reload
 // development features:
 //

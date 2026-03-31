@@ -65,36 +65,64 @@ defmodule OggiWeb.PollLive.New do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-lg mx-auto mt-10">
-      <h1 class="text-2xl font-bold mb-6">Oggi Proprio No</h1>
-      <p class="mb-6 text-gray-600">Create a new scheduling poll</p>
+    <div class="max-w-md mx-auto">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-extrabold tracking-tight mb-2">
+          Find a time
+        </h1>
+        <p class="text-base-content/60 text-sm">
+          Create a poll. Friends mark when they can't. The rest is magic.
+        </p>
+      </div>
 
-      <.form for={@form} id="poll-form" phx-change="validate" phx-submit="save" class="space-y-4">
-        <.input field={@form[:title]} label="Title" placeholder="e.g. Team sync, Dinner" />
-        <.input field={@form[:organizer_name]} label="Your name" placeholder="e.g. Alice" />
-        <.input field={@form[:meeting_duration]} label="Duration (minutes)" type="number" value="60" />
-        <.input field={@form[:date_range_start]} label="From" type="date" />
-        <.input field={@form[:date_range_end]} label="To" type="date" />
+      <.form for={@form} id="poll-form" phx-change="validate" phx-submit="save" class="space-y-5">
+        <.input field={@form[:title]}
+                label="What's the occasion?"
+                placeholder="Aperitivo, team sync, world domination..." />
 
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold">Time windows</label>
-          <div class="flex gap-3">
+        <.input field={@form[:organizer_name]}
+                label="Your name"
+                placeholder="e.g. Marco" />
+
+        <.input field={@form[:meeting_duration]}
+                label="How long? (minutes)"
+                type="number"
+                value="60" />
+
+        <div class="grid grid-cols-2 gap-3">
+          <.input field={@form[:date_range_start]} label="From" type="date" />
+          <.input field={@form[:date_range_end]} label="To" type="date" />
+        </div>
+
+        <div>
+          <span class="label mb-2">When works?</span>
+          <div class="flex gap-2">
             <button
-              :for={kind <- [:morning, :afternoon, :evening]}
+              :for={{kind, label, icon} <- [
+                {:morning, "Morning", "hero-sun"},
+                {:afternoon, "Afternoon", "hero-cloud"},
+                {:evening, "Evening", "hero-moon"}
+              ]}
               type="button"
               phx-click="toggle_pattern"
               phx-value-kind={kind}
               class={[
-                "px-3 py-1 rounded border text-sm",
-                if(kind in @patterns, do: "bg-blue-500 text-white", else: "bg-white text-gray-700")
+                "btn btn-sm flex-1 gap-1.5 transition-all",
+                if(kind in @patterns, do: "btn-primary", else: "btn-soft")
               ]}
             >
-              {kind |> Atom.to_string() |> String.capitalize()}
+              <.icon name={icon} class="size-4" />
+              {label}
             </button>
           </div>
+          <p class="text-xs text-base-content/40 mt-1.5">
+            Morning 8-12 / Afternoon 12-18 / Evening 18-22
+          </p>
         </div>
 
-        <.button type="submit" class="w-full">Create poll</.button>
+        <button type="submit" class="btn btn-primary w-full btn-lg">
+          Create poll
+        </button>
       </.form>
     </div>
     """

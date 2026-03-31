@@ -47,8 +47,8 @@ defmodule OggiWeb.PollLiveTest do
       |> element("#slot-#{slot_id}")
       |> render_click()
 
-      # Verify the slot is now marked as unavailable
-      assert render(participant_view) =~ "unavailable"
+      # Verify the slot is now marked as unavailable (red background class)
+      assert render(participant_view) =~ "bg-error"
 
       # Step 5: Organizer closes the poll
       admin_view
@@ -57,14 +57,14 @@ defmodule OggiWeb.PollLiveTest do
 
       # The resolved slot should NOT be 08:00 (Bob can't make it)
       resolved_html = render(admin_view)
-      assert resolved_html =~ "resolved"
+      assert resolved_html =~ "We have a winner!"
       assert resolved_html =~ "09:00"
     end
   end
 
   defp get_participant_link(html) do
-    # Extract the participant link from the admin page
-    [_, link] = Regex.run(~r|href="(/p/[^"]+)" id="participant-link"|, html)
+    # Extract the participant link from the hidden anchor in the admin page
+    [_, link] = Regex.run(~r|href="(/p/[^"]+)"[^>]*class="hidden"|, html)
     link
   end
 
