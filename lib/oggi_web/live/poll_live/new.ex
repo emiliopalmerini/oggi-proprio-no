@@ -68,40 +68,40 @@ defmodule OggiWeb.PollLive.New do
     <div class="max-w-md mx-auto">
       <div class="text-center mb-8">
         <h1 class="text-3xl font-extrabold tracking-tight mb-2">
-          Find a time
+          {gettext("Find a time")}
         </h1>
         <p class="text-base-content/60 text-sm">
-          Create a poll. Friends mark when they can't. The rest is magic.
+          {gettext("Create a poll. Friends mark when they can't. The rest is magic.")}
         </p>
       </div>
 
       <.form for={@form} id="poll-form" phx-change="validate" phx-submit="save" class="space-y-5">
         <.input field={@form[:title]}
-                label="What's the occasion?"
-                placeholder="Aperitivo, team sync, world domination..." />
+                label={gettext("What's the occasion?")}
+                placeholder={gettext("Aperitivo, team sync, world domination...")} />
 
         <.input field={@form[:organizer_name]}
-                label="Your name"
-                placeholder="e.g. Marco" />
+                label={gettext("Your name")}
+                placeholder={gettext("e.g. Marco")} />
 
         <.input field={@form[:meeting_duration]}
-                label="How long? (minutes)"
+                label={gettext("How long? (minutes)")}
                 type="number"
                 value="60" />
 
         <div class="grid grid-cols-2 gap-3">
-          <.input field={@form[:date_range_start]} label="From" type="date" />
-          <.input field={@form[:date_range_end]} label="To" type="date" />
+          <.input field={@form[:date_range_start]} label={gettext("From")} type="date" />
+          <.input field={@form[:date_range_end]} label={gettext("To")} type="date" />
         </div>
 
         <div>
-          <span class="label mb-2">When works?</span>
+          <span class="label mb-2">{gettext("When works?")}</span>
           <div class="flex gap-2">
             <button
               :for={{kind, label, icon} <- [
-                {:morning, "Morning", "hero-sun"},
-                {:afternoon, "Afternoon", "hero-cloud"},
-                {:evening, "Evening", "hero-moon"}
+                {:morning, gettext("Morning"), "hero-sun"},
+                {:afternoon, gettext("Afternoon"), "hero-cloud"},
+                {:evening, gettext("Evening"), "hero-moon"}
               ]}
               type="button"
               phx-click="toggle_pattern"
@@ -116,12 +116,12 @@ defmodule OggiWeb.PollLive.New do
             </button>
           </div>
           <p class="text-xs text-base-content/40 mt-1.5">
-            Morning 8-12 / Afternoon 12-18 / Evening 18-22
+            {gettext("Morning 8-12 / Afternoon 12-18 / Evening 18-22")}
           </p>
         </div>
 
         <button type="submit" class="btn btn-primary w-full btn-lg">
-          Create poll
+          {gettext("Create poll")}
         </button>
       </.form>
     </div>

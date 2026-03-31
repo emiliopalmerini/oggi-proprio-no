@@ -81,6 +81,8 @@ defmodule OggiWeb do
       import Phoenix.HTML
       # Core UI components
       import OggiWeb.CoreComponents
+      # Translations
+      use Gettext, backend: OggiWeb.Gettext
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS

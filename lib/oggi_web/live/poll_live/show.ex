@@ -9,7 +9,7 @@ defmodule OggiWeb.PollLive.Show do
 
     case poll do
       nil ->
-        {:ok, push_navigate(socket, to: "/") |> put_flash(:error, "Poll not found")}
+        {:ok, push_navigate(socket, to: "/") |> put_flash(:error, gettext("Poll not found"))}
 
       poll ->
         role = if poll.admin_token == token, do: :admin, else: :participant
@@ -37,7 +37,7 @@ defmodule OggiWeb.PollLive.Show do
         {:noreply, assign(socket, participant: refresh_participant(poll, participant.id), poll: poll)}
 
       {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Could not join")}
+        {:noreply, put_flash(socket, :error, gettext("Could not join"))}
     end
   end
 
@@ -50,7 +50,7 @@ defmodule OggiWeb.PollLive.Show do
         {:noreply, assign(socket, poll: poll, participant: participant)}
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Could not update")}
+        {:noreply, put_flash(socket, :error, gettext("Could not update"))}
     end
   end
 
@@ -62,7 +62,7 @@ defmodule OggiWeb.PollLive.Show do
         {:noreply, assign(socket, poll: poll)}
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Could not close poll")}
+        {:noreply, put_flash(socket, :error, gettext("Could not close poll"))}
     end
   end
 
@@ -141,7 +141,7 @@ defmodule OggiWeb.PollLive.Show do
 
   defp organizer_name(poll) do
     case Enum.find(poll.participants, & &1.is_organizer) do
-      nil -> "someone"
+      nil -> gettext("someone")
       p -> p.name
     end
   end
@@ -170,14 +170,14 @@ defmodule OggiWeb.PollLive.Show do
       <div class="mb-6">
         <h1 class="text-2xl font-extrabold tracking-tight">{@poll.title}</h1>
         <p class="text-sm text-base-content/50 mt-0.5">
-          {@poll.meeting_duration} min / organized by {organizer_name(@poll)}
+          {gettext("%{duration} min / organized by %{name}", duration: @poll.meeting_duration, name: organizer_name(@poll))}
         </p>
       </div>
 
       <%!-- Admin: share link card --%>
       <div :if={@role == :admin && @poll.status == :open}
            class="mb-6 p-4 bg-base-200 rounded-box">
-        <p class="text-sm font-medium mb-1.5">Share this with participants:</p>
+        <p class="text-sm font-medium mb-1.5">{gettext("Share this with participants:")}</p>
         <div class="flex items-center gap-2">
           <code
             id="participant-link"
@@ -191,7 +191,7 @@ defmodule OggiWeb.PollLive.Show do
             class="btn btn-sm btn-primary btn-soft"
           >
             <.icon name="hero-clipboard-document" class="size-4" />
-            Copy
+            {gettext("Copy")}
           </button>
         </div>
       </div>
@@ -199,14 +199,14 @@ defmodule OggiWeb.PollLive.Show do
       <%!-- Join form for new participants --%>
       <div :if={@role == :participant && is_nil(@participant) && @poll.status == :open}
            class="mb-6 p-6 bg-base-200 rounded-box text-center">
-        <p class="font-semibold mb-1">Jump in!</p>
+        <p class="font-semibold mb-1">{gettext("Jump in!")}</p>
         <p class="text-sm text-base-content/60 mb-4">
-          Add your name, then tap the slots when you are NOT available.
+          {gettext("Add your name, then tap the slots when you are NOT available.")}
         </p>
         <.form for={@join_form} id="join-form" phx-submit="join"
                class="flex gap-2 max-w-xs mx-auto">
-          <.input field={@join_form[:name]} placeholder="Your name" />
-          <.button type="submit">Join</.button>
+          <.input field={@join_form[:name]} placeholder={gettext("Your name")} />
+          <.button type="submit">{gettext("Join")}</.button>
         </.form>
       </div>
 
@@ -216,11 +216,12 @@ defmodule OggiWeb.PollLive.Show do
         <div class="flex items-center gap-2">
           <.icon name="hero-check-circle-solid" class="size-6 text-success" />
           <div>
-            <p class="font-bold text-success">We have a winner!</p>
+            <p class="font-bold text-success">{gettext("We have a winner!")}</p>
             <p class="text-sm">
-              {format_date_long(@poll.resolved_slot.start_time)}
-              — {format_time(@poll.resolved_slot.start_time)}
-              to {format_time(@poll.resolved_slot.end_time)}
+              {gettext("%{date} — %{start} to %{end}",
+                date: format_date_long(@poll.resolved_slot.start_time),
+                start: format_time(@poll.resolved_slot.start_time),
+                end: format_time(@poll.resolved_slot.end_time))}
             </p>
           </div>
         </div>
@@ -230,15 +231,14 @@ defmodule OggiWeb.PollLive.Show do
            class="mb-6 p-4 bg-error/10 border border-error/30 rounded-box">
         <div class="flex items-center gap-2">
           <.icon name="hero-x-circle-solid" class="size-6 text-error" />
-          <p class="font-bold text-error">No available slot found. Oggi proprio no!</p>
+          <p class="font-bold text-error">{gettext("No available slot found. Oggi proprio no!")}</p>
         </div>
       </div>
 
       <%!-- Participant instruction --%>
       <p :if={@participant && @poll.status == :open}
          class="mb-3 text-sm text-base-content/60">
-        Tap the slots when you <strong>can't</strong> make it.
-        Red = you are busy.
+        {raw(gettext("Tap the slots when you <strong>can't</strong> make it. Red = you are busy."))}
       </p>
 
       <%!-- Calendar grid --%>
@@ -301,31 +301,31 @@ defmodule OggiWeb.PollLive.Show do
       <div class="mt-4 flex flex-wrap gap-4 text-xs text-base-content/50">
         <div class="flex items-center gap-1.5">
           <span class="inline-block w-3 h-3 rounded-sm bg-base-100 border border-base-300"></span>
-          Available
+          {gettext("Available")}
         </div>
         <div class="flex items-center gap-1.5">
           <span class="inline-block w-3 h-3 rounded-sm bg-error/20 border border-error/40"></span>
-          You can't
+          {gettext("You can't")}
         </div>
         <div :if={@role == :admin} class="flex items-center gap-1.5">
           <span class="inline-block w-3 h-3 rounded-sm bg-error/40 border border-error/60"></span>
-          Others can't (count shown)
+          {gettext("Others can't (count shown)")}
         </div>
         <div :if={@poll.status == :resolved} class="flex items-center gap-1.5">
           <span class="inline-block w-3 h-3 rounded-sm bg-success/20 border border-success/40"></span>
-          Winner
+          {gettext("Winner")}
         </div>
       </div>
 
       <%!-- Participants list --%>
       <div :if={length(@poll.participants) > 0} class="mt-6">
         <h2 class="text-sm font-semibold mb-2 text-base-content/60">
-          Participants ({length(@poll.participants)})
+          {gettext("Participants (%{count})", count: length(@poll.participants))}
         </h2>
         <div class="flex flex-wrap gap-2">
           <span :for={p <- @poll.participants} class="badge badge-lg badge-soft">
             {p.name}
-            <span :if={p.is_organizer} class="text-xs text-primary ml-0.5">(organizer)</span>
+            <span :if={p.is_organizer} class="text-xs text-primary ml-0.5">{gettext("(organizer)")}</span>
           </span>
         </div>
       </div>
@@ -335,11 +335,11 @@ defmodule OggiWeb.PollLive.Show do
         :if={@role == :admin && @poll.status == :open}
         id="close-poll"
         phx-click="close_poll"
-        data-confirm="This will find the best slot and close the poll. Proceed?"
+        data-confirm={gettext("This will find the best slot and close the poll. Proceed?")}
         class="mt-8 btn btn-error btn-soft w-full"
       >
         <.icon name="hero-lock-closed" class="size-4" />
-        Close poll and find the best slot
+        {gettext("Close poll and find the best slot")}
       </button>
     </div>
     """

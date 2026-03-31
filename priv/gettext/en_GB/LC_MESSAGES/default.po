@@ -1,0 +1,203 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: en_GB\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/oggi_web/live/poll_live/show.ex:221
+#, elixir-autogen, elixir-format
+msgid "%{date} — %{start} to %{end}"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:173
+#, elixir-autogen, elixir-format
+msgid "%{duration} min / organized by %{name}"
+msgstr "%{duration} min / organised by %{name}"
+
+#: lib/oggi_web/live/poll_live/show.ex:328
+#, elixir-autogen, elixir-format
+msgid "(organizer)"
+msgstr "(organiser)"
+
+#: lib/oggi_web/live/poll_live/show.ex:204
+#, elixir-autogen, elixir-format
+msgid "Add your name, then tap the slots when you are NOT available."
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:103
+#, elixir-autogen, elixir-format
+msgid "Afternoon"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:81
+#, elixir-autogen, elixir-format
+msgid "Aperitivo, team sync, world domination..."
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:304
+#, elixir-autogen, elixir-format
+msgid "Available"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:342
+#, elixir-autogen, elixir-format
+msgid "Close poll and find the best slot"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:194
+#, elixir-autogen, elixir-format
+msgid "Copy"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:65
+#, elixir-autogen, elixir-format
+msgid "Could not close poll"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:40
+#, elixir-autogen, elixir-format
+msgid "Could not join"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:53
+#, elixir-autogen, elixir-format
+msgid "Could not update"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:74
+#, elixir-autogen, elixir-format
+msgid "Create a poll. Friends mark when they can't. The rest is magic."
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:124
+#, elixir-autogen, elixir-format
+msgid "Create poll"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:104
+#, elixir-autogen, elixir-format
+msgid "Evening"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:71
+#, elixir-autogen, elixir-format
+msgid "Find a time"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:93
+#, elixir-autogen, elixir-format
+msgid "From"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:88
+#, elixir-autogen, elixir-format
+msgid "How long? (minutes)"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:209
+#, elixir-autogen, elixir-format
+msgid "Join"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:202
+#, elixir-autogen, elixir-format
+msgid "Jump in!"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:102
+#, elixir-autogen, elixir-format
+msgid "Morning"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:119
+#, elixir-autogen, elixir-format
+msgid "Morning 8-12 / Afternoon 12-18 / Evening 18-22"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:234
+#, elixir-autogen, elixir-format
+msgid "No available slot found. Oggi proprio no!"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:312
+#, elixir-autogen, elixir-format
+msgid "Others can't (count shown)"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:323
+#, elixir-autogen, elixir-format
+msgid "Participants (%{count})"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:12
+#, elixir-autogen, elixir-format
+msgid "Poll not found"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:180
+#, elixir-autogen, elixir-format
+msgid "Share this with participants:"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:241
+#, elixir-autogen, elixir-format
+msgid "Tap the slots when you <strong>can't</strong> make it. Red = you are busy."
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:338
+#, elixir-autogen, elixir-format
+msgid "This will find the best slot and close the poll. Proceed?"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:94
+#, elixir-autogen, elixir-format
+msgid "To"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:219
+#, elixir-autogen, elixir-format
+msgid "We have a winner!"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:80
+#, elixir-autogen, elixir-format
+msgid "What's the occasion?"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:98
+#, elixir-autogen, elixir-format
+msgid "When works?"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:316
+#, elixir-autogen, elixir-format
+msgid "Winner"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:308
+#, elixir-autogen, elixir-format
+msgid "You can't"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:84
+#: lib/oggi_web/live/poll_live/show.ex:208
+#, elixir-autogen, elixir-format
+msgid "Your name"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:85
+#, elixir-autogen, elixir-format
+msgid "e.g. Marco"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/show.ex:144
+#, elixir-autogen, elixir-format
+msgid "someone"
+msgstr ""

@@ -48,6 +48,11 @@ config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+# Configure Gettext
+config :oggi, OggiWeb.Gettext,
+  default_locale: "en_US",
+  locales: ~w(en_US en_GB fr de it es)
+
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
