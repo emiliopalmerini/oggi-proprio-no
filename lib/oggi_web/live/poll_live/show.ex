@@ -146,6 +146,19 @@ defmodule OggiWeb.PollLive.Show do
     end
   end
 
+  defp show_calendar?(assigns) do
+    assigns.role == :admin or assigns.participant != nil
+  end
+
+  defp format_date_range(poll) do
+    if poll.date_range_start == poll.date_range_end do
+      Calendar.strftime(poll.date_range_start, "%d/%m/%Y")
+    else
+      Calendar.strftime(poll.date_range_start, "%d/%m/%Y") <>
+        " – " <> Calendar.strftime(poll.date_range_end, "%d/%m/%Y")
+    end
+  end
+
   defp slot_cell_class(slot, participant, poll) do
     cond do
       poll.status == :resolved && poll.resolved_slot_id == slot.id ->
@@ -196,13 +209,36 @@ defmodule OggiWeb.PollLive.Show do
         </div>
       </div>
 
-      <%!-- Join form for new participants --%>
+      <%!-- Participant landing page (not yet joined, poll open) --%>
       <div :if={@role == :participant && is_nil(@participant) && @poll.status == :open}
-           class="mb-6 p-6 bg-base-200 rounded-box text-center">
-        <p class="font-semibold mb-1">{gettext("Jump in!")}</p>
+           class="mb-6 p-8 bg-base-200 rounded-box text-center max-w-md mx-auto">
+        <.icon name="hero-calendar-days" class="size-10 text-primary mx-auto mb-3" />
+        <p class="text-lg font-bold mb-1">{gettext("You've been invited!")}</p>
         <p class="text-sm text-base-content/60 mb-4">
-          {gettext("Add your name, then tap the slots when you are NOT available.")}
+          {gettext("%{organizer} is looking for the best time for:", organizer: organizer_name(@poll))}
         </p>
+        <p class="font-semibold text-primary mb-4">{@poll.title}</p>
+
+        <div class="flex flex-col gap-1 text-sm text-base-content/60 mb-6">
+          <p>
+            <.icon name="hero-clock" class="size-4 inline-block align-text-bottom" />
+            {gettext("%{duration} minutes", duration: @poll.meeting_duration)}
+          </p>
+          <p>
+            <.icon name="hero-calendar" class="size-4 inline-block align-text-bottom" />
+            {format_date_range(@poll)}
+          </p>
+          <p>
+            <.icon name="hero-users" class="size-4 inline-block align-text-bottom" />
+            {gettext("%{count} participants so far", count: length(@poll.participants))}
+          </p>
+        </div>
+
+        <div class="bg-base-300/50 rounded-box p-4 mb-6 text-sm text-base-content/70">
+          <p class="font-medium mb-1">{gettext("How does it work?")}</p>
+          <p>{gettext("Enter your name, then mark the slots when you are NOT available. The app will find the best time for everyone.")}</p>
+        </div>
+
         <.form for={@join_form} id="join-form" phx-submit="join"
                class="flex gap-2 max-w-xs mx-auto">
           <.input field={@join_form[:name]} placeholder={gettext("Your name")} />
@@ -235,6 +271,8 @@ defmodule OggiWeb.PollLive.Show do
         </div>
       </div>
 
+      <%!-- Everything below is only visible after joining (or for admin) --%>
+      <%= if show_calendar?(assigns) do %>
       <%!-- Participant instruction --%>
       <p :if={@participant && @poll.status == :open}
          class="mb-3 text-sm text-base-content/60">
@@ -341,6 +379,7 @@ defmodule OggiWeb.PollLive.Show do
         <.icon name="hero-lock-closed" class="size-4" />
         {gettext("Close poll and find the best slot")}
       </button>
+      <% end %>
     </div>
     """
   end
