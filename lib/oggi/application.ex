@@ -14,8 +14,7 @@ defmodule Oggi.Application do
        repos: Application.fetch_env!(:oggi, :ecto_repos), skip: skip_migrations?()},
       {DNSCluster, query: Application.get_env(:oggi, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Oggi.PubSub},
-      # Start a worker by calling: Oggi.Worker.start_link(arg)
-      # {Oggi.Worker, arg},
+      Oggi.Polls.Cleaner,
       # Start to serve requests, typically the last entry
       OggiWeb.Endpoint
     ]
