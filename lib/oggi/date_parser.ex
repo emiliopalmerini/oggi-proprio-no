@@ -69,6 +69,69 @@ defmodule Oggi.DateParser do
     }
   }
 
+  # Numeric range prefixes (all gender/plural forms of "next")
+  @numeric_prefixes %{
+    en: ~w(next),
+    it: ~w(prossimi prossime prossimo prossima),
+    fr: ~w(prochains prochaines prochain prochaine),
+    de: ~w(nächste nächsten nächstes),
+    es: ~w(próximos próximas próximo próxima)
+  }
+
+  # Unit words mapped to range type (singular and plural)
+  @unit_words %{
+    en: %{
+      "day" => :days,
+      "days" => :days,
+      "week" => :weeks,
+      "weeks" => :weeks,
+      "month" => :months,
+      "months" => :months,
+      "weekend" => :weekends,
+      "weekends" => :weekends
+    },
+    it: %{
+      "giorno" => :days,
+      "giorni" => :days,
+      "settimana" => :weeks,
+      "settimane" => :weeks,
+      "mese" => :months,
+      "mesi" => :months,
+      "fine settimana" => :weekends
+    },
+    fr: %{
+      "jour" => :days,
+      "jours" => :days,
+      "semaine" => :weeks,
+      "semaines" => :weeks,
+      "mois" => :months,
+      "week-end" => :weekends,
+      "week-ends" => :weekends
+    },
+    de: %{
+      "tag" => :days,
+      "tage" => :days,
+      "woche" => :weeks,
+      "wochen" => :weeks,
+      "monat" => :months,
+      "monate" => :months,
+      "wochenende" => :weekends,
+      "wochenenden" => :weekends
+    },
+    es: %{
+      "día" => :days,
+      "días" => :days,
+      "dia" => :days,
+      "dias" => :days,
+      "semana" => :weeks,
+      "semanas" => :weeks,
+      "mes" => :months,
+      "meses" => :months,
+      "fin de semana" => :weekends,
+      "fines de semana" => :weekends
+    }
+  }
+
   @dictionaries %{
     en: %{
       when: [
@@ -159,10 +222,13 @@ defmodule Oggi.DateParser do
     {remaining, when_tokens} = extract_tokens(normalized, dictionary.when, :when)
     {remaining, time_tokens} = extract_tokens(remaining, dictionary.time, :time)
 
-    # Second pass: try day-of-week resolution on remaining text
+    # Second pass: try numeric range (e.g. "next 3 weeks")
+    {remaining, numeric_token} = extract_numeric_range(remaining, locale, today)
+
+    # Third pass: try day-of-week resolution on remaining text
     {remaining, day_token} = extract_day_of_week(remaining, locale, today)
 
-    all_when_tokens = when_tokens ++ day_token
+    all_when_tokens = when_tokens ++ numeric_token ++ day_token
 
     unrecognized =
       remaining
@@ -205,6 +271,68 @@ defmodule Oggi.DateParser do
         {remaining, found}
       end
     end)
+  end
+
+  defp extract_numeric_range(remaining, locale, today) do
+    prefixes = Map.get(@numeric_prefixes, locale, @numeric_prefixes.en)
+    units = Map.get(@unit_words, locale, @unit_words.en)
+
+    # Sort unit phrases longest-first for greedy matching
+    sorted_units = units |> Map.keys() |> Enum.sort_by(&(-String.length(&1)))
+
+    # Try to match: <prefix> <number> <unit>
+    Enum.find_value(prefixes, {remaining, []}, fn prefix ->
+      Enum.find_value(sorted_units, fn unit_text ->
+        pattern = "#{prefix} " <> "(\\d+) " <> Regex.escape(unit_text)
+
+        case Regex.run(~r/#{pattern}/i, remaining) do
+          [full_match, n_str] ->
+            n = String.to_integer(n_str)
+            unit = Map.fetch!(units, unit_text)
+            date_range = resolve_numeric_range(unit, n, today)
+            token_text = "#{prefix} #{n} #{unit_text}"
+            new_remaining = String.replace(remaining, full_match, "") |> String.trim()
+            token = [%{text: token_text, kind: :when, value: {:numeric, date_range}}]
+            {new_remaining, token}
+
+          _ ->
+            nil
+        end
+      end)
+    end)
+  end
+
+  defp resolve_numeric_range(:days, n, today) do
+    {today, Date.add(today, n - 1)}
+  end
+
+  defp resolve_numeric_range(:weeks, n, today) do
+    {today, Date.add(today, n * 7 - 1)}
+  end
+
+  defp resolve_numeric_range(:months, n, today) do
+    # "next N months" = today through end of the Nth month (counting current month as 1st)
+    end_date =
+      Enum.reduce(1..(n - 1)//1, today, fn _, acc ->
+        acc |> Date.end_of_month() |> Date.add(1)
+      end)
+      |> Date.end_of_month()
+
+    {today, end_date}
+  end
+
+  defp resolve_numeric_range(:weekends, n, today) do
+    day_of_week = Date.day_of_week(today, :monday)
+
+    first_saturday =
+      cond do
+        day_of_week == 6 -> today
+        day_of_week == 7 -> Date.add(today, 6)
+        true -> Date.add(today, 6 - day_of_week)
+      end
+
+    last_sunday = first_saturday |> Date.add(1 + (n - 1) * 7)
+    {first_saturday, last_sunday}
   end
 
   defp extract_day_of_week(remaining, locale, today) do
@@ -267,6 +395,7 @@ defmodule Oggi.DateParser do
 
   defp resolve_date_range(nil, today), do: resolve_when(:this_week, today)
   defp resolve_date_range(%{value: {:day, date}}, _today), do: {date, date}
+  defp resolve_date_range(%{value: {:numeric, date_range}}, _today), do: date_range
   defp resolve_date_range(token, today), do: resolve_when(token.value, today)
 
   defp resolve_when(:this_week, today) do
