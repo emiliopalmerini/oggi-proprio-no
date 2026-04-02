@@ -175,12 +175,6 @@ defmodule OggiWeb.PollLive.New do
             </span>
           </div>
 
-          <div :if={@unrecognized != []} class="flex flex-wrap gap-1.5 mt-1" id="unrecognized-chips">
-            <span :for={word <- @unrecognized} class="badge badge-sm badge-warning badge-outline">
-              {word}?
-            </span>
-          </div>
-
           <p class="text-xs text-base-content/40 mt-1.5" id="slot-preview">
             {ngettext("%{count} slot", "%{count} slots", @slot_count)} &mdash; {Calendar.strftime(
               @date_start,

@@ -48,17 +48,17 @@ defmodule OggiWeb.PollLive.NewSemanticTest do
       assert path =~ ~r"/p/.+"
     end
 
-    test "shows guidance for unrecognized tokens", %{conn: conn} do
+    test "only shows recognized tokens, ignores unrecognized", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/")
 
-      html =
-        view
-        |> element("#poll-form")
-        |> render_change(%{poll: %{when_input: "next week brunch"}})
+      view
+      |> element("#poll-form")
+      |> render_change(%{poll: %{when_input: "next week brunch"}})
 
-      assert html =~ "brunch"
-      # Should still show parsed parts
-      assert html =~ "next week"
+      # Chips area should show "next week" but not "brunch"
+      chips_html = view |> element("#parsed-chips") |> render()
+      assert chips_html =~ "next week"
+      refute chips_html =~ "brunch"
     end
 
     test "defaults work with empty input", %{conn: conn} do
