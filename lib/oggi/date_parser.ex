@@ -74,6 +74,8 @@ defmodule Oggi.DateParser do
       when: [
         {"next weekend", :next_weekend},
         {"this weekend", :this_weekend},
+        {"next month", :next_month},
+        {"this month", :this_month},
         {"next week", :next_week},
         {"this week", :this_week},
         {"tomorrow", :tomorrow}
@@ -88,6 +90,8 @@ defmodule Oggi.DateParser do
       when: [
         {"prossimo fine settimana", :next_weekend},
         {"questo fine settimana", :this_weekend},
+        {"prossimo mese", :next_month},
+        {"questo mese", :this_month},
         {"prossima settimana", :next_week},
         {"questa settimana", :this_week},
         {"domani", :tomorrow}
@@ -102,6 +106,8 @@ defmodule Oggi.DateParser do
       when: [
         {"week-end prochain", :next_weekend},
         {"ce week-end", :this_weekend},
+        {"mois prochain", :next_month},
+        {"ce mois", :this_month},
         {"semaine prochaine", :next_week},
         {"cette semaine", :this_week},
         {"demain", :tomorrow}
@@ -116,6 +122,8 @@ defmodule Oggi.DateParser do
       when: [
         {"nächstes wochenende", :next_weekend},
         {"dieses wochenende", :this_weekend},
+        {"nächsten monat", :next_month},
+        {"diesen monat", :this_month},
         {"nächste woche", :next_week},
         {"diese woche", :this_week},
         {"morgen", :tomorrow}
@@ -130,6 +138,8 @@ defmodule Oggi.DateParser do
       when: [
         {"próximo fin de semana", :next_weekend},
         {"este fin de semana", :this_weekend},
+        {"próximo mes", :next_month},
+        {"este mes", :this_month},
         {"próxima semana", :next_week},
         {"esta semana", :this_week},
         {"mañana", :tomorrow}
@@ -276,6 +286,17 @@ defmodule Oggi.DateParser do
   defp resolve_when(:tomorrow, today) do
     tomorrow = Date.add(today, 1)
     {tomorrow, tomorrow}
+  end
+
+  defp resolve_when(:this_month, today) do
+    end_of_month = Date.end_of_month(today)
+    {today, end_of_month}
+  end
+
+  defp resolve_when(:next_month, today) do
+    first_of_next = today |> Date.end_of_month() |> Date.add(1)
+    end_of_next = Date.end_of_month(first_of_next)
+    {first_of_next, end_of_next}
   end
 
   defp resolve_when(:this_weekend, today) do

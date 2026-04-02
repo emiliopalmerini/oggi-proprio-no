@@ -31,6 +31,16 @@ defmodule Oggi.DateParserTest do
       assert {:ok, result} = DateParser.parse("next weekend", :en, @today)
       assert result.date_range == {~D[2026-04-11], ~D[2026-04-12]}
     end
+
+    test "parses 'this month' as remaining days in current month" do
+      assert {:ok, result} = DateParser.parse("this month", :en, @today)
+      assert result.date_range == {~D[2026-04-02], ~D[2026-04-30]}
+    end
+
+    test "parses 'next month' as full next month" do
+      assert {:ok, result} = DateParser.parse("next month", :en, @today)
+      assert result.date_range == {~D[2026-05-01], ~D[2026-05-31]}
+    end
   end
 
   describe "time tokens" do
@@ -148,6 +158,16 @@ defmodule Oggi.DateParserTest do
     test "parses 'pomeriggio'" do
       assert {:ok, result} = DateParser.parse("pomeriggio", :it, @today)
       assert result.patterns == [:afternoon]
+    end
+
+    test "parses 'questo mese'" do
+      assert {:ok, result} = DateParser.parse("questo mese", :it, @today)
+      assert result.date_range == {~D[2026-04-02], ~D[2026-04-30]}
+    end
+
+    test "parses 'prossimo mese'" do
+      assert {:ok, result} = DateParser.parse("prossimo mese", :it, @today)
+      assert result.date_range == {~D[2026-05-01], ~D[2026-05-31]}
     end
   end
 
