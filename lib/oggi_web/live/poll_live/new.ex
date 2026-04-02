@@ -88,14 +88,25 @@ defmodule OggiWeb.PollLive.New do
     end
   end
 
+  @windows %{
+    morning: "8:00–12:00",
+    afternoon: "12:00–18:00",
+    evening: "18:00–22:00"
+  }
+
   defp assign_parsed(socket, parsed) do
     {date_start, date_end} = parsed.date_range
+
+    time_ranges =
+      parsed.patterns
+      |> Enum.map(&Map.fetch!(@windows, &1))
 
     assign(socket,
       parsed_tokens: parsed.tokens,
       unrecognized: parsed.unrecognized,
       date_start: date_start,
-      date_end: date_end
+      date_end: date_end,
+      time_ranges: time_ranges
     )
   end
 
@@ -154,22 +165,13 @@ defmodule OggiWeb.PollLive.New do
             autocomplete="off"
           />
 
-          <div :if={@parsed_tokens != []} class="flex flex-wrap gap-1.5 mt-2" id="parsed-chips">
-            <span
-              :for={token <- @parsed_tokens}
-              class={[
-                "badge badge-sm",
-                if(token.kind == :when, do: "badge-primary", else: "badge-secondary")
-              ]}
-            >
-              {token.text}
-            </span>
-          </div>
-
           <p class="text-xs text-base-content/40 mt-1.5" id="slot-preview">
             {Calendar.strftime(@date_start, "%a %d %b")}
             <span :if={@date_start != @date_end}>
               &mdash; {Calendar.strftime(@date_end, "%a %d %b")}
+            </span>
+            <span :if={@time_ranges != []}>
+              &middot; {Enum.join(@time_ranges, ", ")}
             </span>
           </p>
         </div>

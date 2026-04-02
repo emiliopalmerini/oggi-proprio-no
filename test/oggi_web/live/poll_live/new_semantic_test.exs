@@ -4,7 +4,7 @@ defmodule OggiWeb.PollLive.NewSemanticTest do
   import Phoenix.LiveViewTest
 
   describe "semantic date input" do
-    test "shows parsed chips and date preview on input", %{conn: conn} do
+    test "shows date range and time windows on input", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/")
 
       html =
@@ -12,11 +12,11 @@ defmodule OggiWeb.PollLive.NewSemanticTest do
         |> element("#poll-form")
         |> render_change(%{poll: %{when_input: "next week evening"}})
 
-      assert html =~ "next week"
-      assert html =~ "evening"
-      # Should show date range preview
+      # Shows resolved dates
       assert html =~ "Mon"
       assert html =~ "Sun"
+      # Shows time window
+      assert html =~ "18:00"
     end
 
     test "creates poll from semantic input", %{conn: conn} do
@@ -49,17 +49,18 @@ defmodule OggiWeb.PollLive.NewSemanticTest do
       assert path =~ ~r"/p/.+"
     end
 
-    test "only shows recognized tokens, ignores unrecognized", %{conn: conn} do
+    test "unrecognized tokens are silently ignored", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/")
 
-      view
-      |> element("#poll-form")
-      |> render_change(%{poll: %{when_input: "next week brunch"}})
+      html =
+        view
+        |> element("#poll-form")
+        |> render_change(%{poll: %{when_input: "next week brunch"}})
 
-      # Chips area should show "next week" but not "brunch"
-      chips_html = view |> element("#parsed-chips") |> render()
-      assert chips_html =~ "next week"
-      refute chips_html =~ "brunch"
+      # Shows the resolved date range, "brunch" is ignored
+      preview = view |> element("#slot-preview") |> render()
+      assert preview =~ "Mon"
+      refute preview =~ "brunch"
     end
 
     test "defaults work with empty input", %{conn: conn} do
