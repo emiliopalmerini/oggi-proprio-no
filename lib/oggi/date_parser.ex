@@ -6,6 +6,69 @@ defmodule Oggi.DateParser do
 
   @default_patterns [:morning, :afternoon, :evening]
 
+  @next_prefixes %{
+    en: "next",
+    it: "prossimo",
+    fr: "prochain",
+    de: "nächsten",
+    es: "próximo"
+  }
+
+  @day_names %{
+    en: %{
+      "monday" => 1,
+      "tuesday" => 2,
+      "wednesday" => 3,
+      "thursday" => 4,
+      "friday" => 5,
+      "saturday" => 6,
+      "sunday" => 7
+    },
+    it: %{
+      "lunedì" => 1,
+      "lunedi" => 1,
+      "martedì" => 2,
+      "martedi" => 2,
+      "mercoledì" => 3,
+      "mercoledi" => 3,
+      "giovedì" => 4,
+      "giovedi" => 4,
+      "venerdì" => 5,
+      "venerdi" => 5,
+      "sabato" => 6,
+      "domenica" => 7
+    },
+    fr: %{
+      "lundi" => 1,
+      "mardi" => 2,
+      "mercredi" => 3,
+      "jeudi" => 4,
+      "vendredi" => 5,
+      "samedi" => 6,
+      "dimanche" => 7
+    },
+    de: %{
+      "montag" => 1,
+      "dienstag" => 2,
+      "mittwoch" => 3,
+      "donnerstag" => 4,
+      "freitag" => 5,
+      "samstag" => 6,
+      "sonntag" => 7
+    },
+    es: %{
+      "lunes" => 1,
+      "martes" => 2,
+      "miércoles" => 3,
+      "miercoles" => 3,
+      "jueves" => 4,
+      "viernes" => 5,
+      "sábado" => 6,
+      "sabado" => 6,
+      "domingo" => 7
+    }
+  }
+
   @dictionaries %{
     en: %{
       when: [
@@ -86,16 +149,21 @@ defmodule Oggi.DateParser do
     {remaining, when_tokens} = extract_tokens(normalized, dictionary.when, :when)
     {remaining, time_tokens} = extract_tokens(remaining, dictionary.time, :time)
 
+    # Second pass: try day-of-week resolution on remaining text
+    {remaining, day_token} = extract_day_of_week(remaining, locale, today)
+
+    all_when_tokens = when_tokens ++ day_token
+
     unrecognized =
       remaining
       |> String.split(~r/\s+/, trim: true)
 
-    when_value = List.first(when_tokens)
+    when_value = List.first(all_when_tokens)
     date_range = resolve_date_range(when_value, today)
     patterns = Enum.map(time_tokens, & &1.value)
 
     tokens =
-      Enum.map(when_tokens ++ time_tokens, fn token ->
+      Enum.map(all_when_tokens ++ time_tokens, fn token ->
         %{text: token.text, kind: token.kind, value: token.value}
       end)
 
@@ -129,7 +197,66 @@ defmodule Oggi.DateParser do
     end)
   end
 
+  defp extract_day_of_week(remaining, locale, today) do
+    day_map = Map.get(@day_names, locale, @day_names.en)
+    next_prefix = Map.get(@next_prefixes, locale, "next")
+    words = String.split(remaining, ~r/\s+/, trim: true)
+
+    {has_next, words_without_next} =
+      if next_prefix in words do
+        {true, List.delete(words, next_prefix)}
+      else
+        {false, words}
+      end
+
+    case find_day_name(words_without_next, day_map) do
+      {day_word, target_dow} ->
+        date = resolve_day_of_week(target_dow, has_next, today)
+        token_text = if has_next, do: "#{next_prefix} #{day_word}", else: day_word
+        token = [%{text: token_text, kind: :when, value: {:day, date}}]
+
+        leftover =
+          words_without_next
+          |> List.delete(day_word)
+          |> Enum.join(" ")
+
+        {leftover, token}
+
+      nil when has_next ->
+        # "next" was consumed but no day found; put it back
+        {remaining, []}
+
+      nil ->
+        {remaining, []}
+    end
+  end
+
+  defp find_day_name(words, day_map) do
+    Enum.find_value(words, fn word ->
+      case Map.get(day_map, word) do
+        nil -> nil
+        dow -> {word, dow}
+      end
+    end)
+  end
+
+  defp resolve_day_of_week(target_dow, has_next, today) do
+    current_dow = Date.day_of_week(today, :monday)
+    days_ahead = rem(target_dow - current_dow + 7, 7)
+
+    days_ahead =
+      if has_next do
+        days_ahead + 7
+      else
+        # Same day = today; past day = next week
+        days_ahead
+      end
+
+    Date.add(today, days_ahead)
+  end
+
   defp resolve_date_range(nil, today), do: resolve_when(:this_week, today)
+  defp resolve_date_range(%{value: {:day, date}}, _today), do: {date, date}
   defp resolve_date_range(token, today), do: resolve_when(token.value, today)
 
   defp resolve_when(:this_week, today) do

@@ -191,6 +191,68 @@ defmodule Oggi.DateParserTest do
     end
   end
 
+  describe "day-of-week tokens" do
+    # 2026-04-02 is a Thursday
+
+    test "parses 'saturday' as this coming Saturday" do
+      assert {:ok, result} = DateParser.parse("saturday", :en, @today)
+      assert result.date_range == {~D[2026-04-04], ~D[2026-04-04]}
+    end
+
+    test "parses 'next saturday' as Saturday of next week" do
+      assert {:ok, result} = DateParser.parse("next saturday", :en, @today)
+      assert result.date_range == {~D[2026-04-11], ~D[2026-04-11]}
+    end
+
+    test "parses 'monday' as next Monday (already past this week)" do
+      assert {:ok, result} = DateParser.parse("monday", :en, @today)
+      # Thursday today, Monday is past; next Monday is Apr 6
+      assert result.date_range == {~D[2026-04-06], ~D[2026-04-06]}
+    end
+
+    test "parses 'thursday' as today (same day)" do
+      assert {:ok, result} = DateParser.parse("thursday", :en, @today)
+      assert result.date_range == {~D[2026-04-02], ~D[2026-04-02]}
+    end
+
+    test "parses 'next monday' as Monday after the coming one" do
+      assert {:ok, result} = DateParser.parse("next monday", :en, @today)
+      # Today is Thursday; "monday" = Apr 6; "next monday" = Apr 13
+      assert result.date_range == {~D[2026-04-13], ~D[2026-04-13]}
+    end
+
+    test "parses 'friday evening'" do
+      assert {:ok, result} = DateParser.parse("friday evening", :en, @today)
+      assert result.date_range == {~D[2026-04-03], ~D[2026-04-03]}
+      assert result.patterns == [:evening]
+    end
+
+    test "parses Italian 'sabato'" do
+      assert {:ok, result} = DateParser.parse("sabato", :it, @today)
+      assert result.date_range == {~D[2026-04-04], ~D[2026-04-04]}
+    end
+
+    test "parses Italian 'prossimo sabato'" do
+      assert {:ok, result} = DateParser.parse("prossimo sabato", :it, @today)
+      assert result.date_range == {~D[2026-04-11], ~D[2026-04-11]}
+    end
+
+    test "parses French 'samedi'" do
+      assert {:ok, result} = DateParser.parse("samedi", :fr, @today)
+      assert result.date_range == {~D[2026-04-04], ~D[2026-04-04]}
+    end
+
+    test "parses German 'Samstag'" do
+      assert {:ok, result} = DateParser.parse("Samstag", :de, @today)
+      assert result.date_range == {~D[2026-04-04], ~D[2026-04-04]}
+    end
+
+    test "parses Spanish 'sábado'" do
+      assert {:ok, result} = DateParser.parse("sábado", :es, @today)
+      assert result.date_range == {~D[2026-04-04], ~D[2026-04-04]}
+    end
+  end
+
   describe "edge cases" do
     test "this week on a Sunday returns just Sunday" do
       sunday = ~D[2026-04-05]

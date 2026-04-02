@@ -1,6 +1,6 @@
 # ADR-005: Semantic Date Input with Natural Language Parser
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-04-02
 
 ## Context
