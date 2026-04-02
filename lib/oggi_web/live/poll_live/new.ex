@@ -3,32 +3,58 @@ defmodule OggiWeb.PollLive.New do
 
   alias Oggi.Polls
   alias Oggi.Polls.Poll
+  alias Oggi.DateParser
+  alias Oggi.SlotGenerator
 
   @impl true
   def mount(_params, _session, socket) do
     changeset = Poll.changeset(%Poll{}, %{})
-    {:ok, assign(socket, form: to_form(changeset), patterns: [:morning])}
+    parser_loc = parser_locale()
+    parsed = parse_input("", parser_loc)
+
+    socket =
+      socket
+      |> assign(form: to_form(changeset), parser_locale: parser_loc, when_input: "")
+      |> assign_parsed(parsed)
+
+    {:ok, socket}
   end
 
   @impl true
   def handle_event("validate", %{"poll" => poll_params}, socket) do
+    when_input = Map.get(poll_params, "when_input", socket.assigns.when_input)
+    parsed = parse_input(when_input, socket.assigns.parser_locale)
+
     changeset =
       %Poll{}
-      |> Poll.changeset(poll_params)
+      |> Poll.changeset(build_poll_params(poll_params, parsed))
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, form: to_form(changeset))}
+    socket =
+      socket
+      |> assign(form: to_form(changeset), when_input: when_input)
+      |> assign_parsed(parsed)
+
+    {:noreply, socket}
   end
 
   @impl true
   def handle_event("save", %{"poll" => poll_params}, socket) do
+    when_input = Map.get(poll_params, "when_input", socket.assigns.when_input)
+    parsed = parse_input(when_input, socket.assigns.parser_locale)
+
     patterns =
-      socket.assigns.patterns
+      parsed.patterns
       |> Enum.map(fn kind -> %{kind: kind, days_of_week: []} end)
+
+    {date_start, date_end} = parsed.date_range
 
     attrs =
       poll_params
+      |> Map.put("date_range_start", Date.to_iso8601(date_start))
+      |> Map.put("date_range_end", Date.to_iso8601(date_end))
       |> Map.put("patterns", patterns)
+      |> Map.delete("when_input")
       |> atomize_keys()
 
     case Polls.create_poll(attrs) do
@@ -40,19 +66,46 @@ defmodule OggiWeb.PollLive.New do
     end
   end
 
-  @impl true
-  def handle_event("toggle_pattern", %{"kind" => kind}, socket) do
-    kind = String.to_existing_atom(kind)
-    patterns = socket.assigns.patterns
+  defp parse_input(input, locale) do
+    {:ok, parsed} = DateParser.parse(input, locale, Date.utc_today())
+    parsed
+  end
 
-    updated =
-      if kind in patterns do
-        List.delete(patterns, kind)
-      else
-        patterns ++ [kind]
-      end
+  defp build_poll_params(poll_params, parsed) do
+    {date_start, date_end} = parsed.date_range
 
-    {:noreply, assign(socket, patterns: updated)}
+    poll_params
+    |> Map.put("date_range_start", Date.to_iso8601(date_start))
+    |> Map.put("date_range_end", Date.to_iso8601(date_end))
+  end
+
+  defp parser_locale do
+    case Gettext.get_locale(OggiWeb.Gettext) do
+      "it" -> :it
+      "fr" -> :fr
+      "de" -> :de
+      "es" -> :es
+      _ -> :en
+    end
+  end
+
+  defp assign_parsed(socket, parsed) do
+    {date_start, date_end} = parsed.date_range
+    slot_count = count_preview_slots(parsed)
+
+    assign(socket,
+      parsed_tokens: parsed.tokens,
+      unrecognized: parsed.unrecognized,
+      date_start: date_start,
+      date_end: date_end,
+      slot_count: slot_count
+    )
+  end
+
+  defp count_preview_slots(parsed) do
+    patterns = Enum.map(parsed.patterns, fn kind -> %{kind: kind, days_of_week: []} end)
+    slots = SlotGenerator.generate(patterns, parsed.date_range, 60)
+    length(slots)
   end
 
   defp atomize_keys(map) do
@@ -61,6 +114,12 @@ defmodule OggiWeb.PollLive.New do
       {k, v} -> {k, v}
     end)
   end
+
+  defp placeholder(:it), do: "prossima settimana sera"
+  defp placeholder(:fr), do: "semaine prochaine soir"
+  defp placeholder(:de), do: "nächste Woche Abend"
+  defp placeholder(:es), do: "próxima semana noche"
+  defp placeholder(_), do: "next week evening"
 
   @impl true
   def render(assigns) do
@@ -76,47 +135,60 @@ defmodule OggiWeb.PollLive.New do
       </div>
 
       <.form for={@form} id="poll-form" phx-change="validate" phx-submit="save" class="space-y-5">
-        <.input field={@form[:title]}
-                label={gettext("What's the occasion?")}
-                placeholder={gettext("Aperitivo, team sync, world domination...")} />
+        <.input
+          field={@form[:title]}
+          label={gettext("What's the occasion?")}
+          placeholder={gettext("Aperitivo, team sync, world domination...")}
+        />
 
-        <.input field={@form[:organizer_name]}
-                label={gettext("Your name")}
-                placeholder={gettext("e.g. Marco")} />
+        <.input
+          field={@form[:organizer_name]}
+          label={gettext("Your name")}
+          placeholder={gettext("e.g. Marco")}
+        />
 
-        <.input field={@form[:meeting_duration]}
-                label={gettext("How long? (minutes)")}
-                type="number"
-                value="60" />
-
-        <div class="grid grid-cols-2 gap-3">
-          <.input field={@form[:date_range_start]} label={gettext("From")} type="date" />
-          <.input field={@form[:date_range_end]} label={gettext("To")} type="date" />
-        </div>
+        <.input
+          field={@form[:meeting_duration]}
+          label={gettext("How long? (minutes)")}
+          type="number"
+          value="60"
+        />
 
         <div>
-          <span class="label mb-2">{gettext("When works?")}</span>
-          <div class="flex gap-2">
-            <button
-              :for={{kind, label, icon} <- [
-                {:morning, gettext("Morning"), "hero-sun"},
-                {:afternoon, gettext("Afternoon"), "hero-cloud"},
-                {:evening, gettext("Evening"), "hero-moon"}
-              ]}
-              type="button"
-              phx-click="toggle_pattern"
-              phx-value-kind={kind}
+          <.input
+            name="poll[when_input]"
+            label={gettext("When?")}
+            value={@when_input}
+            placeholder={placeholder(@parser_locale)}
+            autocomplete="off"
+          />
+
+          <div :if={@parsed_tokens != []} class="flex flex-wrap gap-1.5 mt-2" id="parsed-chips">
+            <span
+              :for={token <- @parsed_tokens}
               class={[
-                "btn btn-sm flex-1 gap-1.5 transition-all",
-                if(kind in @patterns, do: "btn-primary", else: "btn-soft")
+                "badge badge-sm",
+                if(token.kind == :when, do: "badge-primary", else: "badge-secondary")
               ]}
             >
-              <.icon name={icon} class="size-4" />
-              {label}
-            </button>
+              {token.text}
+            </span>
           </div>
-          <p class="text-xs text-base-content/40 mt-1.5">
-            {gettext("Morning 8-12 / Afternoon 12-18 / Evening 18-22")}
+
+          <div :if={@unrecognized != []} class="flex flex-wrap gap-1.5 mt-1" id="unrecognized-chips">
+            <span :for={word <- @unrecognized} class="badge badge-sm badge-warning badge-outline">
+              {word}?
+            </span>
+          </div>
+
+          <p class="text-xs text-base-content/40 mt-1.5" id="slot-preview">
+            {ngettext("%{count} slot", "%{count} slots", @slot_count)} &mdash; {Calendar.strftime(
+              @date_start,
+              "%a %d %b"
+            )}
+            <span :if={@date_start != @date_end}>
+              {gettext("to")} {Calendar.strftime(@date_end, "%a %d %b")}
+            </span>
           </p>
         </div>
 

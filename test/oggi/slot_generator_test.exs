@@ -42,7 +42,10 @@ defmodule Oggi.SlotGeneratorTest do
     end
 
     test "generates custom window slots" do
-      patterns = [%{kind: :custom, days_of_week: [], custom_start: ~T[14:00:00], custom_end: ~T[18:00:00]}]
+      patterns = [
+        %{kind: :custom, days_of_week: [], custom_start: ~T[14:00:00], custom_end: ~T[18:00:00]}
+      ]
+
       date_range = {~D[2026-04-06], ~D[2026-04-06]}
 
       slots = SlotGenerator.generate(patterns, date_range, 60)
@@ -70,7 +73,8 @@ defmodule Oggi.SlotGeneratorTest do
 
       slots = SlotGenerator.generate(patterns, date_range, 60)
 
-      assert length(slots) == 12  # 3 days * 4 slots
+      # 3 days * 4 slots
+      assert length(slots) == 12
     end
 
     test "deduplicates overlapping patterns" do
@@ -79,6 +83,7 @@ defmodule Oggi.SlotGeneratorTest do
         %{kind: :morning, days_of_week: []},
         %{kind: :custom, days_of_week: [], custom_start: ~T[09:00:00], custom_end: ~T[11:00:00]}
       ]
+
       date_range = {~D[2026-04-06], ~D[2026-04-06]}
 
       slots = SlotGenerator.generate(patterns, date_range, 60)
@@ -110,6 +115,7 @@ defmodule Oggi.SlotGeneratorTest do
         %{kind: :evening, days_of_week: []},
         %{kind: :morning, days_of_week: []}
       ]
+
       date_range = {~D[2026-04-06], ~D[2026-04-06]}
 
       slots = SlotGenerator.generate(patterns, date_range, 60)

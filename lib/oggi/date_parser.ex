@@ -156,9 +156,13 @@ defmodule Oggi.DateParser do
 
     cond do
       # Sunday
-      day_of_week == 7 -> {today, today}
+      day_of_week == 7 ->
+        {today, today}
+
       # Saturday
-      day_of_week == 6 -> {today, Date.add(today, 1)}
+      day_of_week == 6 ->
+        {today, Date.add(today, 1)}
+
       # Weekday: jump to Saturday
       true ->
         saturday = Date.add(today, 6 - day_of_week)

@@ -34,7 +34,9 @@ defmodule OggiWeb.PollLive.Show do
       {:ok, participant} ->
         poll = Polls.get_poll!(socket.assigns.poll.id)
         broadcast(poll.id, :poll_updated)
-        {:noreply, assign(socket, participant: refresh_participant(poll, participant.id), poll: poll)}
+
+        {:noreply,
+         assign(socket, participant: refresh_participant(poll, participant.id), poll: poll)}
 
       {:error, _changeset} ->
         {:noreply, put_flash(socket, :error, gettext("Could not join"))}
@@ -183,13 +185,18 @@ defmodule OggiWeb.PollLive.Show do
       <div class="mb-6">
         <h1 class="text-2xl font-extrabold tracking-tight">{@poll.title}</h1>
         <p class="text-sm text-base-content/50 mt-0.5">
-          {gettext("%{duration} min / organized by %{name}", duration: @poll.meeting_duration, name: organizer_name(@poll))}
+          {gettext("%{duration} min / organized by %{name}",
+            duration: @poll.meeting_duration,
+            name: organizer_name(@poll)
+          )}
         </p>
       </div>
 
       <%!-- Admin: share link card --%>
-      <div :if={@role == :admin && @poll.status == :open}
-           class="mb-6 p-4 bg-base-200 rounded-box">
+      <div
+        :if={@role == :admin && @poll.status == :open}
+        class="mb-6 p-4 bg-base-200 rounded-box"
+      >
         <p class="text-sm font-medium mb-1.5">{gettext("Share this with participants:")}</p>
         <div class="flex items-center gap-2">
           <code
@@ -210,8 +217,10 @@ defmodule OggiWeb.PollLive.Show do
       </div>
 
       <%!-- Participant landing page (not yet joined, poll open) --%>
-      <div :if={@role == :participant && is_nil(@participant) && @poll.status == :open}
-           class="mb-6 p-8 bg-base-200 rounded-box text-center max-w-md mx-auto">
+      <div
+        :if={@role == :participant && is_nil(@participant) && @poll.status == :open}
+        class="mb-6 p-8 bg-base-200 rounded-box text-center max-w-md mx-auto"
+      >
         <.icon name="hero-calendar-days" class="size-10 text-primary mx-auto mb-3" />
         <p class="text-lg font-bold mb-1">{gettext("You've been invited!")}</p>
         <p class="text-sm text-base-content/60 mb-4">
@@ -236,19 +245,24 @@ defmodule OggiWeb.PollLive.Show do
 
         <div class="bg-base-300/50 rounded-box p-4 mb-6 text-sm text-base-content/70">
           <p class="font-medium mb-1">{gettext("How does it work?")}</p>
-          <p>{gettext("Enter your name, then mark the slots when you are NOT available. The app will find the best time for everyone.")}</p>
+          <p>
+            {gettext(
+              "Enter your name, then mark the slots when you are NOT available. The app will find the best time for everyone."
+            )}
+          </p>
         </div>
 
-        <.form for={@join_form} id="join-form" phx-submit="join"
-               class="flex gap-2 max-w-xs mx-auto">
+        <.form for={@join_form} id="join-form" phx-submit="join" class="flex gap-2 max-w-xs mx-auto">
           <.input field={@join_form[:name]} placeholder={gettext("Your name")} />
           <.button type="submit">{gettext("Join")}</.button>
         </.form>
       </div>
 
       <%!-- Resolved / closed banner --%>
-      <div :if={@poll.status == :resolved}
-           class="mb-6 p-4 bg-success/10 border border-success/30 rounded-box">
+      <div
+        :if={@poll.status == :resolved}
+        class="mb-6 p-4 bg-success/10 border border-success/30 rounded-box"
+      >
         <div class="flex items-center gap-2">
           <.icon name="hero-check-circle-solid" class="size-6 text-success" />
           <div>
@@ -257,14 +271,17 @@ defmodule OggiWeb.PollLive.Show do
               {gettext("%{date} — %{start} to %{end}",
                 date: format_date_long(@poll.resolved_slot.start_time),
                 start: format_time(@poll.resolved_slot.start_time),
-                end: format_time(@poll.resolved_slot.end_time))}
+                end: format_time(@poll.resolved_slot.end_time)
+              )}
             </p>
           </div>
         </div>
       </div>
 
-      <div :if={@poll.status == :closed && is_nil(@poll.resolved_slot_id)}
-           class="mb-6 p-4 bg-error/10 border border-error/30 rounded-box">
+      <div
+        :if={@poll.status == :closed && is_nil(@poll.resolved_slot_id)}
+        class="mb-6 p-4 bg-error/10 border border-error/30 rounded-box"
+      >
         <div class="flex items-center gap-2">
           <.icon name="hero-x-circle-solid" class="size-6 text-error" />
           <p class="font-bold text-error">{gettext("No available slot found. Oggi proprio no!")}</p>
@@ -273,112 +290,119 @@ defmodule OggiWeb.PollLive.Show do
 
       <%!-- Everything below is only visible after joining (or for admin) --%>
       <%= if show_calendar?(assigns) do %>
-      <%!-- Participant instruction --%>
-      <p :if={@participant && @poll.status == :open}
-         class="mb-3 text-sm text-base-content/60">
-        {raw(gettext("Tap the slots when you <strong>can't</strong> make it. Red = you are busy."))}
-      </p>
-
-      <%!-- Calendar grid --%>
-      <div class="overflow-x-auto -mx-4 px-4">
-        <div
-          class="inline-grid gap-px bg-base-300 rounded-box overflow-hidden border border-base-300"
-          style={"grid-template-columns: auto repeat(#{length(slot_days(@poll.slots))}, minmax(5rem, 1fr));"}
+        <%!-- Participant instruction --%>
+        <p
+          :if={@participant && @poll.status == :open}
+          class="mb-3 text-sm text-base-content/60"
         >
-          <%!-- Header row: empty corner + day labels --%>
-          <div class="bg-base-200 px-2 py-2.5 text-xs font-medium text-base-content/40 sticky left-0 z-10">
-          </div>
-          <div
-            :for={day <- slot_days(@poll.slots)}
-            class="bg-base-200 px-2 py-2.5 text-center"
-          >
-            <div class="text-xs font-medium text-base-content/50">
-              {Calendar.strftime(day, "%a")}
-            </div>
-            <div class="text-sm font-bold">
-              {Calendar.strftime(day, "%d/%m")}
-            </div>
-          </div>
+          {raw(gettext("Tap the slots when you <strong>can't</strong> make it. Red = you are busy."))}
+        </p>
 
-          <%!-- Data rows: time label + slot cells --%>
-          <%= for time <- slot_times(@poll.slots) do %>
-            <div class="bg-base-100 px-2 py-3 text-xs font-mono text-base-content/50
-                        flex items-center sticky left-0 z-10">
-              {Calendar.strftime(time, "%H:%M")}
+        <%!-- Calendar grid --%>
+        <div class="overflow-x-auto -mx-4 px-4">
+          <div
+            class="inline-grid gap-px bg-base-300 rounded-box overflow-hidden border border-base-300"
+            style={"grid-template-columns: auto repeat(#{length(slot_days(@poll.slots))}, minmax(5rem, 1fr));"}
+          >
+            <%!-- Header row: empty corner + day labels --%>
+            <div class="bg-base-200 px-2 py-2.5 text-xs font-medium text-base-content/40 sticky left-0 z-10">
             </div>
-            <%= for day <- slot_days(@poll.slots) do %>
-              <%= if slot = find_slot(@poll.slots, day, time) do %>
-                <div
-                  id={"slot-#{slot.id}"}
-                  phx-click={if @participant && @poll.status == :open, do: "toggle_slot"}
-                  phx-value-slot-id={slot.id}
-                  class={[
-                    "h-full min-h-[2.75rem] flex items-center justify-center transition-colors",
-                    slot_cell_class(slot, @participant, @poll)
-                  ]}
-                >
-                  <span :if={@role == :admin && unavailability_count(slot, @poll) > 0}
-                        class="text-xs font-bold opacity-70">
-                    {unavailability_count(slot, @poll)}
-                  </span>
-                  <.icon
-                    :if={@poll.status == :resolved && @poll.resolved_slot_id == slot.id}
-                    name="hero-star-solid"
-                    class="size-5 text-success"
-                  />
-                </div>
-              <% else %>
-                <div class="bg-base-200/50 min-h-[2.75rem]"></div>
+            <div
+              :for={day <- slot_days(@poll.slots)}
+              class="bg-base-200 px-2 py-2.5 text-center"
+            >
+              <div class="text-xs font-medium text-base-content/50">
+                {Calendar.strftime(day, "%a")}
+              </div>
+              <div class="text-sm font-bold">
+                {Calendar.strftime(day, "%d/%m")}
+              </div>
+            </div>
+
+            <%!-- Data rows: time label + slot cells --%>
+            <%= for time <- slot_times(@poll.slots) do %>
+              <div class="bg-base-100 px-2 py-3 text-xs font-mono text-base-content/50
+                        flex items-center sticky left-0 z-10">
+                {Calendar.strftime(time, "%H:%M")}
+              </div>
+              <%= for day <- slot_days(@poll.slots) do %>
+                <%= if slot = find_slot(@poll.slots, day, time) do %>
+                  <div
+                    id={"slot-#{slot.id}"}
+                    phx-click={if @participant && @poll.status == :open, do: "toggle_slot"}
+                    phx-value-slot-id={slot.id}
+                    class={[
+                      "h-full min-h-[2.75rem] flex items-center justify-center transition-colors",
+                      slot_cell_class(slot, @participant, @poll)
+                    ]}
+                  >
+                    <span
+                      :if={@role == :admin && unavailability_count(slot, @poll) > 0}
+                      class="text-xs font-bold opacity-70"
+                    >
+                      {unavailability_count(slot, @poll)}
+                    </span>
+                    <.icon
+                      :if={@poll.status == :resolved && @poll.resolved_slot_id == slot.id}
+                      name="hero-star-solid"
+                      class="size-5 text-success"
+                    />
+                  </div>
+                <% else %>
+                  <div class="bg-base-200/50 min-h-[2.75rem]"></div>
+                <% end %>
               <% end %>
             <% end %>
-          <% end %>
+          </div>
         </div>
-      </div>
 
-      <%!-- Legend --%>
-      <div class="mt-4 flex flex-wrap gap-4 text-xs text-base-content/50">
-        <div class="flex items-center gap-1.5">
-          <span class="inline-block w-3 h-3 rounded-sm bg-base-100 border border-base-300"></span>
-          {gettext("Available")}
+        <%!-- Legend --%>
+        <div class="mt-4 flex flex-wrap gap-4 text-xs text-base-content/50">
+          <div class="flex items-center gap-1.5">
+            <span class="inline-block w-3 h-3 rounded-sm bg-base-100 border border-base-300"></span>
+            {gettext("Available")}
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="inline-block w-3 h-3 rounded-sm bg-error/20 border border-error/40"></span>
+            {gettext("You can't")}
+          </div>
+          <div :if={@role == :admin} class="flex items-center gap-1.5">
+            <span class="inline-block w-3 h-3 rounded-sm bg-error/40 border border-error/60"></span>
+            {gettext("Others can't (count shown)")}
+          </div>
+          <div :if={@poll.status == :resolved} class="flex items-center gap-1.5">
+            <span class="inline-block w-3 h-3 rounded-sm bg-success/20 border border-success/40">
+            </span>
+            {gettext("Winner")}
+          </div>
         </div>
-        <div class="flex items-center gap-1.5">
-          <span class="inline-block w-3 h-3 rounded-sm bg-error/20 border border-error/40"></span>
-          {gettext("You can't")}
-        </div>
-        <div :if={@role == :admin} class="flex items-center gap-1.5">
-          <span class="inline-block w-3 h-3 rounded-sm bg-error/40 border border-error/60"></span>
-          {gettext("Others can't (count shown)")}
-        </div>
-        <div :if={@poll.status == :resolved} class="flex items-center gap-1.5">
-          <span class="inline-block w-3 h-3 rounded-sm bg-success/20 border border-success/40"></span>
-          {gettext("Winner")}
-        </div>
-      </div>
 
-      <%!-- Participants list --%>
-      <div :if={length(@poll.participants) > 0} class="mt-6">
-        <h2 class="text-sm font-semibold mb-2 text-base-content/60">
-          {gettext("Participants (%{count})", count: length(@poll.participants))}
-        </h2>
-        <div class="flex flex-wrap gap-2">
-          <span :for={p <- @poll.participants} class="badge badge-lg badge-soft">
-            {p.name}
-            <span :if={p.is_organizer} class="text-xs text-primary ml-0.5">{gettext("(organizer)")}</span>
-          </span>
+        <%!-- Participants list --%>
+        <div :if={length(@poll.participants) > 0} class="mt-6">
+          <h2 class="text-sm font-semibold mb-2 text-base-content/60">
+            {gettext("Participants (%{count})", count: length(@poll.participants))}
+          </h2>
+          <div class="flex flex-wrap gap-2">
+            <span :for={p <- @poll.participants} class="badge badge-lg badge-soft">
+              {p.name}
+              <span :if={p.is_organizer} class="text-xs text-primary ml-0.5">
+                {gettext("(organizer)")}
+              </span>
+            </span>
+          </div>
         </div>
-      </div>
 
-      <%!-- Close button for admin --%>
-      <button
-        :if={@role == :admin && @poll.status == :open}
-        id="close-poll"
-        phx-click="close_poll"
-        data-confirm={gettext("This will find the best slot and close the poll. Proceed?")}
-        class="mt-8 btn btn-error btn-soft w-full"
-      >
-        <.icon name="hero-lock-closed" class="size-4" />
-        {gettext("Close poll and find the best slot")}
-      </button>
+        <%!-- Close button for admin --%>
+        <button
+          :if={@role == :admin && @poll.status == :open}
+          id="close-poll"
+          phx-click="close_poll"
+          data-confirm={gettext("This will find the best slot and close the poll. Proceed?")}
+          class="mt-8 btn btn-error btn-soft w-full"
+        >
+          <.icon name="hero-lock-closed" class="size-4" />
+          {gettext("Close poll and find the best slot")}
+        </button>
       <% end %>
     </div>
     """

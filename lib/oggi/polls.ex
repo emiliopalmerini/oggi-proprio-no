@@ -79,8 +79,14 @@ defmodule Oggi.Polls do
     |> Ecto.Changeset.change(%{status: status, resolved_slot_id: slot_id(resolved_slot)})
     |> Repo.update()
     |> case do
-      {:ok, poll} -> {:ok, Repo.preload(poll, [:resolved_slot, :slots, participants: :unavailabilities], force: true)}
-      error -> error
+      {:ok, poll} ->
+        {:ok,
+         Repo.preload(poll, [:resolved_slot, :slots, participants: :unavailabilities],
+           force: true
+         )}
+
+      error ->
+        error
     end
   end
 

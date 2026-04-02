@@ -38,8 +38,12 @@ defmodule Oggi.Polls.Poll do
     end_date = get_field(changeset, :date_range_end)
 
     case {start_date, end_date} do
-      {nil, _} -> changeset
-      {_, nil} -> changeset
+      {nil, _} ->
+        changeset
+
+      {_, nil} ->
+        changeset
+
       {s, e} ->
         if Date.compare(s, e) == :gt do
           add_error(changeset, :date_range_end, "must be after start date")
