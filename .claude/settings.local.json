@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mix compile:*)",
+      "Bash(mix:*)",
+      "Bash(for locale:*)",
+      "Bash(do mix:*)",
+      "Bash(done)"
+    ]
+  }
+}
