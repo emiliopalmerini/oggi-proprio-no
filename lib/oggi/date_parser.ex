@@ -4,7 +4,7 @@ defmodule Oggi.DateParser do
   Pure logic, no database, no side effects.
   """
 
-  @default_patterns [:morning, :afternoon, :evening]
+  @default_patterns [:evening]
 
   @next_prefixes %{
     en: "next",
@@ -402,7 +402,7 @@ defmodule Oggi.DateParser do
     if Date.compare(a, b) == :gt, do: b, else: a
   end
 
-  defp resolve_date_range(nil, today), do: resolve_when(:this_week, today)
+  defp resolve_date_range(nil, today), do: resolve_when(:next_week, today)
   defp resolve_date_range(%{value: {:day, date}}, _today), do: {date, date}
   defp resolve_date_range(%{value: {:numeric, date_range}}, _today), do: date_range
   defp resolve_date_range(token, today), do: resolve_when(token.value, today)

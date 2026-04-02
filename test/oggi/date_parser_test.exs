@@ -88,20 +88,20 @@ defmodule Oggi.DateParserTest do
   end
 
   describe "defaults" do
-    test "empty input defaults to this week + all patterns" do
+    test "empty input defaults to next week + evening" do
       assert {:ok, result} = DateParser.parse("", :en, @today)
-      assert result.date_range == {~D[2026-04-02], ~D[2026-04-05]}
-      assert result.patterns == [:morning, :afternoon, :evening]
+      assert result.date_range == {~D[2026-04-06], ~D[2026-04-12]}
+      assert result.patterns == [:evening]
     end
 
-    test "only when token defaults to all patterns" do
+    test "only when token defaults to evening" do
       assert {:ok, result} = DateParser.parse("next week", :en, @today)
-      assert result.patterns == [:morning, :afternoon, :evening]
+      assert result.patterns == [:evening]
     end
 
-    test "only time token defaults to this week" do
-      assert {:ok, result} = DateParser.parse("evening", :en, @today)
-      assert result.date_range == {~D[2026-04-02], ~D[2026-04-05]}
+    test "only time token defaults to next week" do
+      assert {:ok, result} = DateParser.parse("morning", :en, @today)
+      assert result.date_range == {~D[2026-04-06], ~D[2026-04-12]}
     end
   end
 
@@ -374,8 +374,8 @@ defmodule Oggi.DateParserTest do
 
     test "fully unrecognized input falls back to defaults" do
       assert {:ok, result} = DateParser.parse("xyz abc", :en, @today)
-      assert result.date_range == {~D[2026-04-02], ~D[2026-04-05]}
-      assert result.patterns == [:morning, :afternoon, :evening]
+      assert result.date_range == {~D[2026-04-06], ~D[2026-04-12]}
+      assert result.patterns == [:evening]
       assert "xyz" in result.unrecognized
       assert "abc" in result.unrecognized
     end
