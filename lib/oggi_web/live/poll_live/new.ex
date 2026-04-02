@@ -203,18 +203,18 @@ defmodule OggiWeb.PollLive.New do
 
         <div>
           <span class="label mb-2">{gettext("What time?")}</span>
-          <div class="flex gap-2">
+          <div class="flex flex-wrap gap-1.5">
             <button
               :for={kind <- @time_options}
               type="button"
               phx-click="toggle_pattern"
               phx-value-kind={kind}
               class={[
-                "btn btn-sm flex-1 gap-1.5 transition-all",
+                "btn btn-xs transition-all",
                 if(kind in @patterns, do: "btn-primary", else: "btn-soft")
               ]}
             >
-              <.icon name={time_icon(kind)} class="size-4" />
+              <.icon name={time_icon(kind)} class="size-3" />
               {time_label(kind)}
             </button>
           </div>
