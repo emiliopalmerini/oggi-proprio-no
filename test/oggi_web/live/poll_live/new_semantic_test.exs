@@ -4,7 +4,7 @@ defmodule OggiWeb.PollLive.NewSemanticTest do
   import Phoenix.LiveViewTest
 
   describe "semantic date input" do
-    test "shows parsed chips and slot preview on input", %{conn: conn} do
+    test "shows parsed chips and date preview on input", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/")
 
       html =
@@ -14,8 +14,9 @@ defmodule OggiWeb.PollLive.NewSemanticTest do
 
       assert html =~ "next week"
       assert html =~ "evening"
-      # Should show a slot count preview
-      assert html =~ ~r/\d+ slots?/
+      # Should show date range preview
+      assert html =~ "Mon"
+      assert html =~ "Sun"
     end
 
     test "creates poll from semantic input", %{conn: conn} do
@@ -69,8 +70,9 @@ defmodule OggiWeb.PollLive.NewSemanticTest do
         |> element("#poll-form")
         |> render_change(%{poll: %{when_input: ""}})
 
-      # Should show slot preview with defaults
-      assert html =~ ~r/\d+ slots?/
+      # Should show date preview with defaults
+      preview_html = view |> element("#slot-preview") |> render()
+      assert preview_html =~ ~r/\w+ \d+ \w+/
     end
   end
 end

@@ -288,10 +288,10 @@ defmodule Oggi.DateParserTest do
       assert result.date_range == {~D[2026-04-02], ~D[2026-04-15]}
     end
 
-    test "parses 'next 3 months'" do
+    test "parses 'next 3 months' clamped to end of next month" do
       assert {:ok, result} = DateParser.parse("next 3 months", :en, @today)
-      # today through end of June (3rd month from April)
-      assert result.date_range == {~D[2026-04-02], ~D[2026-06-30]}
+      # Capped at end of May (end of next month from April)
+      assert result.date_range == {~D[2026-04-02], ~D[2026-05-31]}
     end
 
     test "parses 'next 3 weekends'" do
@@ -321,9 +321,9 @@ defmodule Oggi.DateParserTest do
       assert result.date_range == {~D[2026-04-02], ~D[2026-04-15]}
     end
 
-    test "parses Italian 'prossimi 3 mesi'" do
+    test "parses Italian 'prossimi 3 mesi' clamped to end of next month" do
       assert {:ok, result} = DateParser.parse("prossimi 3 mesi", :it, @today)
-      assert result.date_range == {~D[2026-04-02], ~D[2026-06-30]}
+      assert result.date_range == {~D[2026-04-02], ~D[2026-05-31]}
     end
 
     test "parses Italian 'prossimi 2 fine settimana'" do
@@ -378,6 +378,17 @@ defmodule Oggi.DateParserTest do
       assert result.patterns == [:morning, :afternoon, :evening]
       assert "xyz" in result.unrecognized
       assert "abc" in result.unrecognized
+    end
+
+    test "date range is clamped to end of next month" do
+      # "next 12 months" would go far into the future but gets capped
+      assert {:ok, result} = DateParser.parse("next 12 months", :en, @today)
+      assert result.date_range == {~D[2026-04-02], ~D[2026-05-31]}
+    end
+
+    test "ranges within cap are not affected" do
+      assert {:ok, result} = DateParser.parse("next week", :en, @today)
+      assert result.date_range == {~D[2026-04-06], ~D[2026-04-12]}
     end
   end
 end

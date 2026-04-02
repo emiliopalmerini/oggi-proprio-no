@@ -4,7 +4,6 @@ defmodule OggiWeb.PollLive.New do
   alias Oggi.Polls
   alias Oggi.Polls.Poll
   alias Oggi.DateParser
-  alias Oggi.SlotGenerator
 
   @impl true
   def mount(_params, _session, socket) do
@@ -91,21 +90,13 @@ defmodule OggiWeb.PollLive.New do
 
   defp assign_parsed(socket, parsed) do
     {date_start, date_end} = parsed.date_range
-    slot_count = count_preview_slots(parsed)
 
     assign(socket,
       parsed_tokens: parsed.tokens,
       unrecognized: parsed.unrecognized,
       date_start: date_start,
-      date_end: date_end,
-      slot_count: slot_count
+      date_end: date_end
     )
-  end
-
-  defp count_preview_slots(parsed) do
-    patterns = Enum.map(parsed.patterns, fn kind -> %{kind: kind, days_of_week: []} end)
-    slots = SlotGenerator.generate(patterns, parsed.date_range, 60)
-    length(slots)
   end
 
   defp atomize_keys(map) do
@@ -176,12 +167,9 @@ defmodule OggiWeb.PollLive.New do
           </div>
 
           <p class="text-xs text-base-content/40 mt-1.5" id="slot-preview">
-            {ngettext("%{count} slot", "%{count} slots", @slot_count)} &mdash; {Calendar.strftime(
-              @date_start,
-              "%a %d %b"
-            )}
+            {Calendar.strftime(@date_start, "%a %d %b")}
             <span :if={@date_start != @date_end}>
-              {gettext("to")} {Calendar.strftime(@date_end, "%a %d %b")}
+              &mdash; {Calendar.strftime(@date_end, "%a %d %b")}
             </span>
           </p>
         </div>

@@ -235,7 +235,7 @@ defmodule Oggi.DateParser do
       |> String.split(~r/\s+/, trim: true)
 
     when_value = List.first(all_when_tokens)
-    date_range = resolve_date_range(when_value, today)
+    date_range = resolve_date_range(when_value, today) |> clamp_range(today)
     patterns = Enum.map(time_tokens, & &1.value)
 
     tokens =
@@ -391,6 +391,15 @@ defmodule Oggi.DateParser do
       end
 
     Date.add(today, days_ahead)
+  end
+
+  defp clamp_range({date_start, date_end}, today) do
+    max_date = today |> Date.end_of_month() |> Date.add(1) |> Date.end_of_month()
+    {date_start, min_date(date_end, max_date)}
+  end
+
+  defp min_date(a, b) do
+    if Date.compare(a, b) == :gt, do: b, else: a
   end
 
   defp resolve_date_range(nil, today), do: resolve_when(:this_week, today)
