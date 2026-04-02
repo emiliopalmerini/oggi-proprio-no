@@ -41,8 +41,7 @@ defmodule OggiWeb.PollLive.NewChipsTest do
       |> form("#poll-form",
         poll: %{
           title: "Aperitivo",
-          organizer_name: "Marco",
-          meeting_duration: "60"
+          organizer_name: "Marco"
         }
       )
       |> render_submit()

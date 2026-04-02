@@ -7,6 +7,7 @@ defmodule OggiWeb.PollLive.New do
 
   @when_options ~w(this_week next_week this_weekend next_weekend this_month next_month tomorrow)a
   @time_options ~w(morning afternoon evening)a
+  @duration_options [30, 60, 90, 120]
 
   @time_windows %{
     morning: "8:00–12:00",
@@ -24,6 +25,7 @@ defmodule OggiWeb.PollLive.New do
         form: to_form(changeset),
         when_selected: :next_week,
         patterns: [:evening],
+        duration: 60,
         date_start: date_start,
         date_end: date_end
       )
@@ -47,14 +49,14 @@ defmodule OggiWeb.PollLive.New do
       socket.assigns.patterns
       |> Enum.map(fn kind -> %{kind: kind, days_of_week: []} end)
 
-    attrs =
-      poll_params
-      |> Map.merge(%{
-        "date_range_start" => Date.to_iso8601(socket.assigns.date_start),
-        "date_range_end" => Date.to_iso8601(socket.assigns.date_end),
-        "patterns" => patterns
-      })
-      |> atomize_keys()
+    attrs = %{
+      title: Map.get(poll_params, "title"),
+      organizer_name: Map.get(poll_params, "organizer_name"),
+      meeting_duration: socket.assigns.duration,
+      date_range_start: Date.to_iso8601(socket.assigns.date_start),
+      date_range_end: Date.to_iso8601(socket.assigns.date_end),
+      patterns: patterns
+    }
 
     case Polls.create_poll(attrs) do
       {:ok, poll} ->
@@ -89,17 +91,16 @@ defmodule OggiWeb.PollLive.New do
     {:noreply, assign(socket, patterns: updated)}
   end
 
+  @impl true
+  def handle_event("select_duration", %{"value" => value}, socket) do
+    {:noreply, assign(socket, duration: String.to_integer(value))}
+  end
+
   defp build_poll_params(poll_params, socket) do
     poll_params
     |> Map.put("date_range_start", Date.to_iso8601(socket.assigns.date_start))
     |> Map.put("date_range_end", Date.to_iso8601(socket.assigns.date_end))
-  end
-
-  defp atomize_keys(map) do
-    Map.new(map, fn
-      {k, v} when is_binary(k) -> {String.to_existing_atom(k), v}
-      {k, v} -> {k, v}
-    end)
+    |> Map.put("meeting_duration", to_string(socket.assigns.duration))
   end
 
   defp when_label(:this_week), do: gettext("This week")
@@ -118,6 +119,13 @@ defmodule OggiWeb.PollLive.New do
   defp time_icon(:afternoon), do: "hero-cloud"
   defp time_icon(:evening), do: "hero-moon"
 
+  defp duration_label(minutes) when minutes < 60, do: gettext("%{n}min", n: minutes)
+  defp duration_label(60), do: "1h"
+  defp duration_label(minutes), do: "#{div(minutes, 60)}h#{rem(minutes, 60) |> pad()}"
+
+  defp pad(0), do: ""
+  defp pad(n), do: "#{n}"
+
   @impl true
   def render(assigns) do
     assigns =
@@ -125,6 +133,7 @@ defmodule OggiWeb.PollLive.New do
       |> assign(:when_options, @when_options)
       |> assign(:time_options, @time_options)
       |> assign(:time_windows, @time_windows)
+      |> assign(:duration_options, @duration_options)
 
     ~H"""
     <div class="max-w-md mx-auto">
@@ -150,12 +159,23 @@ defmodule OggiWeb.PollLive.New do
           placeholder={gettext("e.g. Marco")}
         />
 
-        <.input
-          field={@form[:meeting_duration]}
-          label={gettext("How long? (minutes)")}
-          type="number"
-          value="60"
-        />
+        <div>
+          <span class="label mb-2">{gettext("How long?")}</span>
+          <div class="flex gap-2">
+            <button
+              :for={minutes <- @duration_options}
+              type="button"
+              phx-click="select_duration"
+              phx-value-value={minutes}
+              class={[
+                "btn btn-circle btn-sm transition-all",
+                if(minutes == @duration, do: "btn-primary", else: "btn-soft")
+              ]}
+            >
+              {duration_label(minutes)}
+            </button>
+          </div>
+        </div>
 
         <div>
           <span class="label mb-2">{gettext("When?")}</span>

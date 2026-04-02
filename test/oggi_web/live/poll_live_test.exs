@@ -8,7 +8,7 @@ defmodule OggiWeb.PollLiveTest do
       # Step 1: Organizer visits home and creates a poll
       {:ok, view, _html} = live(conn, "/")
 
-      # Select "Tomorrow" and "Morning" chips
+      # Select chips
       view |> element("button", "Tomorrow") |> render_click()
       view |> element("button", "Morning") |> render_click()
 
@@ -16,7 +16,6 @@ defmodule OggiWeb.PollLiveTest do
       |> form("#poll-form",
         poll: %{
           title: "Team sync",
-          meeting_duration: 60,
           organizer_name: "Alice"
         }
       )

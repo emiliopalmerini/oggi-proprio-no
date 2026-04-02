@@ -26,7 +26,7 @@ msgstr ""
 msgid "(organizer)"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:144
+#: lib/oggi_web/live/poll_live/new.ex:153
 #, elixir-autogen, elixir-format
 msgid "Aperitivo, team sync, world domination..."
 msgstr ""
@@ -61,24 +61,19 @@ msgstr ""
 msgid "Could not update"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:136
+#: lib/oggi_web/live/poll_live/new.ex:145
 #, elixir-autogen, elixir-format
 msgid "Create a poll. Friends mark when they can't. The rest is magic."
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:207
+#: lib/oggi_web/live/poll_live/new.ex:227
 #, elixir-autogen, elixir-format
 msgid "Create poll"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:133
+#: lib/oggi_web/live/poll_live/new.ex:142
 #, elixir-autogen, elixir-format
 msgid "Find a time"
-msgstr ""
-
-#: lib/oggi_web/live/poll_live/new.ex:155
-#, elixir-autogen, elixir-format
-msgid "How long? (minutes)"
 msgstr ""
 
 #: lib/oggi_web/live/poll_live/show.ex:257
@@ -126,7 +121,7 @@ msgstr ""
 msgid "We have a winner!"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:143
+#: lib/oggi_web/live/poll_live/new.ex:152
 #, elixir-autogen, elixir-format
 msgid "What's the occasion?"
 msgstr ""
@@ -141,13 +136,13 @@ msgstr ""
 msgid "You can't"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:149
+#: lib/oggi_web/live/poll_live/new.ex:158
 #: lib/oggi_web/live/poll_live/show.ex:256
 #, elixir-autogen, elixir-format
 msgid "Your name"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:150
+#: lib/oggi_web/live/poll_live/new.ex:159
 #, elixir-autogen, elixir-format
 msgid "e.g. Marco"
 msgstr ""
@@ -182,7 +177,7 @@ msgstr ""
 msgid "How does it work?"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:161
+#: lib/oggi_web/live/poll_live/new.ex:181
 #, elixir-autogen, elixir-format
 msgid "When?"
 msgstr ""
@@ -192,57 +187,67 @@ msgstr ""
 msgid "You've been invited!"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:114
+#: lib/oggi_web/live/poll_live/new.ex:115
 #, elixir-autogen, elixir-format
 msgid "Afternoon"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:115
+#: lib/oggi_web/live/poll_live/new.ex:116
 #, elixir-autogen, elixir-format
 msgid "Evening"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:113
+#: lib/oggi_web/live/poll_live/new.ex:114
 #, elixir-autogen, elixir-format
 msgid "Morning"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:110
+#: lib/oggi_web/live/poll_live/new.ex:111
 #, elixir-autogen, elixir-format
 msgid "Next month"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:106
+#: lib/oggi_web/live/poll_live/new.ex:107
 #, elixir-autogen, elixir-format
 msgid "Next week"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:108
+#: lib/oggi_web/live/poll_live/new.ex:109
 #, elixir-autogen, elixir-format
 msgid "Next weekend"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:109
+#: lib/oggi_web/live/poll_live/new.ex:110
 #, elixir-autogen, elixir-format
 msgid "This month"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:105
+#: lib/oggi_web/live/poll_live/new.ex:106
 #, elixir-autogen, elixir-format
 msgid "This week"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:107
+#: lib/oggi_web/live/poll_live/new.ex:108
 #, elixir-autogen, elixir-format
 msgid "This weekend"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:111
+#: lib/oggi_web/live/poll_live/new.ex:112
 #, elixir-autogen, elixir-format
 msgid "Tomorrow"
 msgstr ""
 
-#: lib/oggi_web/live/poll_live/new.ex:185
+#: lib/oggi_web/live/poll_live/new.ex:205
 #, elixir-autogen, elixir-format
 msgid "What time?"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:122
+#, elixir-autogen, elixir-format
+msgid "%{n}min"
+msgstr ""
+
+#: lib/oggi_web/live/poll_live/new.ex:163
+#, elixir-autogen, elixir-format
+msgid "How long?"
 msgstr ""
