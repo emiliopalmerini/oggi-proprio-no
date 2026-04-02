@@ -8,25 +8,16 @@ defmodule OggiWeb.PollLiveTest do
       # Step 1: Organizer visits home and creates a poll
       {:ok, view, _html} = live(conn, "/")
 
-      # First validate to trigger the parser
-      view
-      |> element("#poll-form")
-      |> render_change(%{
-        poll: %{
-          title: "Team sync",
-          meeting_duration: 60,
-          organizer_name: "Alice",
-          when_input: "tomorrow morning"
-        }
-      })
+      # Select "Tomorrow" and "Morning" chips
+      view |> element("button", "Tomorrow") |> render_click()
+      view |> element("button", "Morning") |> render_click()
 
       view
       |> form("#poll-form",
         poll: %{
           title: "Team sync",
           meeting_duration: 60,
-          organizer_name: "Alice",
-          when_input: "tomorrow morning"
+          organizer_name: "Alice"
         }
       )
       |> render_submit()

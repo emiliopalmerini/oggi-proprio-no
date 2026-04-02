@@ -1,46 +1,48 @@
-defmodule OggiWeb.PollLive.NewSemanticTest do
+defmodule OggiWeb.PollLive.NewChipsTest do
   use OggiWeb.ConnCase
 
   import Phoenix.LiveViewTest
 
-  describe "semantic date input" do
-    test "shows date range and time windows on input", %{conn: conn} do
+  describe "chip-based poll creation" do
+    test "shows date range when selecting a when-chip", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/")
 
-      html =
-        view
-        |> element("#poll-form")
-        |> render_change(%{poll: %{when_input: "next week evening"}})
+      view |> element("button", "This weekend") |> render_click()
 
-      # Shows resolved dates
-      assert html =~ "Mon"
-      assert html =~ "Sun"
-      # Shows time window
+      preview = view |> element("#slot-preview") |> render()
+      assert preview =~ "Sat"
+      assert preview =~ "Sun"
+    end
+
+    test "toggles time pattern chips", %{conn: conn} do
+      {:ok, view, html} = live(conn, "/")
+
+      # Evening is selected by default
+      assert html =~ "btn-primary"
+
+      # Toggle morning on
+      view |> element("button", "Morning") |> render_click()
+      html = render(view)
+      assert html =~ "8:00"
       assert html =~ "18:00"
     end
 
-    test "creates poll from semantic input", %{conn: conn} do
+    test "creates poll from chip selections", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/")
 
-      # First trigger a validate so the parser runs
-      view
-      |> element("#poll-form")
-      |> render_change(%{
-        poll: %{
-          title: "Aperitivo",
-          organizer_name: "Marco",
-          meeting_duration: "60",
-          when_input: "next week evening"
-        }
-      })
+      # Select when
+      view |> element("[phx-value-value=next_week]") |> render_click()
 
+      # Select time
+      view |> element("button", "Morning") |> render_click()
+
+      # Fill form and submit
       view
       |> form("#poll-form",
         poll: %{
           title: "Aperitivo",
           organizer_name: "Marco",
-          meeting_duration: "60",
-          when_input: "next week evening"
+          meeting_duration: "60"
         }
       )
       |> render_submit()
@@ -49,31 +51,12 @@ defmodule OggiWeb.PollLive.NewSemanticTest do
       assert path =~ ~r"/p/.+"
     end
 
-    test "unrecognized tokens are silently ignored", %{conn: conn} do
-      {:ok, view, _html} = live(conn, "/")
+    test "default is next week evening", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/")
 
-      html =
-        view
-        |> element("#poll-form")
-        |> render_change(%{poll: %{when_input: "next week brunch"}})
-
-      # Shows the resolved date range, "brunch" is ignored
-      preview = view |> element("#slot-preview") |> render()
-      assert preview =~ "Mon"
-      refute preview =~ "brunch"
-    end
-
-    test "defaults work with empty input", %{conn: conn} do
-      {:ok, view, _html} = live(conn, "/")
-
-      html =
-        view
-        |> element("#poll-form")
-        |> render_change(%{poll: %{when_input: ""}})
-
-      # Should show date preview with defaults
-      preview_html = view |> element("#slot-preview") |> render()
-      assert preview_html =~ ~r/\w+ \d+ \w+/
+      # Next week chip should be active
+      assert html =~ "18:00"
+      assert html =~ "Mon"
     end
   end
 end

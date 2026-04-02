@@ -5,55 +5,55 @@ defmodule OggiWeb.PollLive.New do
   alias Oggi.Polls.Poll
   alias Oggi.DateParser
 
+  @when_options ~w(this_week next_week this_weekend next_weekend this_month next_month tomorrow)a
+  @time_options ~w(morning afternoon evening)a
+
+  @time_windows %{
+    morning: "8:00–12:00",
+    afternoon: "12:00–18:00",
+    evening: "18:00–22:00"
+  }
+
   @impl true
   def mount(_params, _session, socket) do
     changeset = Poll.changeset(%Poll{}, %{})
-    parser_loc = parser_locale()
-    parsed = parse_input("", parser_loc)
+    {date_start, date_end} = DateParser.resolve(:next_week, Date.utc_today())
 
     socket =
-      socket
-      |> assign(form: to_form(changeset), parser_locale: parser_loc, when_input: "")
-      |> assign_parsed(parsed)
+      assign(socket,
+        form: to_form(changeset),
+        when_selected: :next_week,
+        patterns: [:evening],
+        date_start: date_start,
+        date_end: date_end
+      )
 
     {:ok, socket}
   end
 
   @impl true
   def handle_event("validate", %{"poll" => poll_params}, socket) do
-    when_input = Map.get(poll_params, "when_input", socket.assigns.when_input)
-    parsed = parse_input(when_input, socket.assigns.parser_locale)
-
     changeset =
       %Poll{}
-      |> Poll.changeset(build_poll_params(poll_params, parsed))
+      |> Poll.changeset(build_poll_params(poll_params, socket))
       |> Map.put(:action, :validate)
 
-    socket =
-      socket
-      |> assign(form: to_form(changeset), when_input: when_input)
-      |> assign_parsed(parsed)
-
-    {:noreply, socket}
+    {:noreply, assign(socket, form: to_form(changeset))}
   end
 
   @impl true
   def handle_event("save", %{"poll" => poll_params}, socket) do
-    when_input = Map.get(poll_params, "when_input", socket.assigns.when_input)
-    parsed = parse_input(when_input, socket.assigns.parser_locale)
-
     patterns =
-      parsed.patterns
+      socket.assigns.patterns
       |> Enum.map(fn kind -> %{kind: kind, days_of_week: []} end)
-
-    {date_start, date_end} = parsed.date_range
 
     attrs =
       poll_params
-      |> Map.put("date_range_start", Date.to_iso8601(date_start))
-      |> Map.put("date_range_end", Date.to_iso8601(date_end))
-      |> Map.put("patterns", patterns)
-      |> Map.delete("when_input")
+      |> Map.merge(%{
+        "date_range_start" => Date.to_iso8601(socket.assigns.date_start),
+        "date_range_end" => Date.to_iso8601(socket.assigns.date_end),
+        "patterns" => patterns
+      })
       |> atomize_keys()
 
     case Polls.create_poll(attrs) do
@@ -65,49 +65,34 @@ defmodule OggiWeb.PollLive.New do
     end
   end
 
-  defp parse_input(input, locale) do
-    {:ok, parsed} = DateParser.parse(input, locale, Date.utc_today())
-    parsed
+  @impl true
+  def handle_event("select_when", %{"value" => value}, socket) do
+    when_atom = String.to_existing_atom(value)
+    {date_start, date_end} = DateParser.resolve(when_atom, Date.utc_today())
+
+    {:noreply,
+     assign(socket, when_selected: when_atom, date_start: date_start, date_end: date_end)}
   end
 
-  defp build_poll_params(poll_params, parsed) do
-    {date_start, date_end} = parsed.date_range
+  @impl true
+  def handle_event("toggle_pattern", %{"kind" => kind}, socket) do
+    kind = String.to_existing_atom(kind)
+    patterns = socket.assigns.patterns
 
+    updated =
+      if kind in patterns do
+        List.delete(patterns, kind)
+      else
+        patterns ++ [kind]
+      end
+
+    {:noreply, assign(socket, patterns: updated)}
+  end
+
+  defp build_poll_params(poll_params, socket) do
     poll_params
-    |> Map.put("date_range_start", Date.to_iso8601(date_start))
-    |> Map.put("date_range_end", Date.to_iso8601(date_end))
-  end
-
-  defp parser_locale do
-    case Gettext.get_locale(OggiWeb.Gettext) do
-      "it" -> :it
-      "fr" -> :fr
-      "de" -> :de
-      "es" -> :es
-      _ -> :en
-    end
-  end
-
-  @windows %{
-    morning: "8:00–12:00",
-    afternoon: "12:00–18:00",
-    evening: "18:00–22:00"
-  }
-
-  defp assign_parsed(socket, parsed) do
-    {date_start, date_end} = parsed.date_range
-
-    time_ranges =
-      parsed.patterns
-      |> Enum.map(&Map.fetch!(@windows, &1))
-
-    assign(socket,
-      parsed_tokens: parsed.tokens,
-      unrecognized: parsed.unrecognized,
-      date_start: date_start,
-      date_end: date_end,
-      time_ranges: time_ranges
-    )
+    |> Map.put("date_range_start", Date.to_iso8601(socket.assigns.date_start))
+    |> Map.put("date_range_end", Date.to_iso8601(socket.assigns.date_end))
   end
 
   defp atomize_keys(map) do
@@ -117,14 +102,30 @@ defmodule OggiWeb.PollLive.New do
     end)
   end
 
-  defp placeholder(:it), do: "prossima settimana sera"
-  defp placeholder(:fr), do: "semaine prochaine soir"
-  defp placeholder(:de), do: "nächste Woche Abend"
-  defp placeholder(:es), do: "próxima semana noche"
-  defp placeholder(_), do: "next week evening"
+  defp when_label(:this_week), do: gettext("This week")
+  defp when_label(:next_week), do: gettext("Next week")
+  defp when_label(:this_weekend), do: gettext("This weekend")
+  defp when_label(:next_weekend), do: gettext("Next weekend")
+  defp when_label(:this_month), do: gettext("This month")
+  defp when_label(:next_month), do: gettext("Next month")
+  defp when_label(:tomorrow), do: gettext("Tomorrow")
+
+  defp time_label(:morning), do: gettext("Morning")
+  defp time_label(:afternoon), do: gettext("Afternoon")
+  defp time_label(:evening), do: gettext("Evening")
+
+  defp time_icon(:morning), do: "hero-sun"
+  defp time_icon(:afternoon), do: "hero-cloud"
+  defp time_icon(:evening), do: "hero-moon"
 
   @impl true
   def render(assigns) do
+    assigns =
+      assigns
+      |> assign(:when_options, @when_options)
+      |> assign(:time_options, @time_options)
+      |> assign(:time_windows, @time_windows)
+
     ~H"""
     <div class="max-w-md mx-auto">
       <div class="text-center mb-8">
@@ -157,22 +158,48 @@ defmodule OggiWeb.PollLive.New do
         />
 
         <div>
-          <.input
-            name="poll[when_input]"
-            label={gettext("When?")}
-            value={@when_input}
-            placeholder={placeholder(@parser_locale)}
-            autocomplete="off"
-          />
-
+          <span class="label mb-2">{gettext("When?")}</span>
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              :for={option <- @when_options}
+              type="button"
+              phx-click="select_when"
+              phx-value-value={option}
+              class={[
+                "btn btn-xs transition-all",
+                if(option == @when_selected, do: "btn-primary", else: "btn-soft")
+              ]}
+            >
+              {when_label(option)}
+            </button>
+          </div>
           <p class="text-xs text-base-content/40 mt-1.5" id="slot-preview">
             {Calendar.strftime(@date_start, "%a %d %b")}
             <span :if={@date_start != @date_end}>
               &mdash; {Calendar.strftime(@date_end, "%a %d %b")}
             </span>
-            <span :if={@time_ranges != []}>
-              &middot; {Enum.join(@time_ranges, ", ")}
-            </span>
+          </p>
+        </div>
+
+        <div>
+          <span class="label mb-2">{gettext("What time?")}</span>
+          <div class="flex gap-2">
+            <button
+              :for={kind <- @time_options}
+              type="button"
+              phx-click="toggle_pattern"
+              phx-value-kind={kind}
+              class={[
+                "btn btn-sm flex-1 gap-1.5 transition-all",
+                if(kind in @patterns, do: "btn-primary", else: "btn-soft")
+              ]}
+            >
+              <.icon name={time_icon(kind)} class="size-4" />
+              {time_label(kind)}
+            </button>
+          </div>
+          <p class="text-xs text-base-content/40 mt-1.5">
+            {Enum.map_join(@patterns, ", ", &Map.fetch!(@time_windows, &1))}
           </p>
         </div>
 

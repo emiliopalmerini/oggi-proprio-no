@@ -393,6 +393,13 @@ defmodule Oggi.DateParser do
     Date.add(today, days_ahead)
   end
 
+  @doc """
+  Resolves a when-atom to a concrete date range, clamped to end of next month.
+  """
+  def resolve(when_atom, today) do
+    resolve_when(when_atom, today) |> clamp_range(today)
+  end
+
   defp clamp_range({date_start, date_end}, today) do
     max_date = today |> Date.end_of_month() |> Date.add(1) |> Date.end_of_month()
     {date_start, min_date(date_end, max_date)}

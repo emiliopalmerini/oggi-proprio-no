@@ -26,7 +26,7 @@ msgstr "%{duration} min / organizzato da %{name}"
 msgid "(organizer)"
 msgstr "(organizzatore)"
 
-#: lib/oggi_web/live/poll_live/new.ex:141
+#: lib/oggi_web/live/poll_live/new.ex:144
 #, elixir-autogen, elixir-format
 msgid "Aperitivo, team sync, world domination..."
 msgstr "Aperitivo, riunione, conquista del mondo..."
@@ -61,22 +61,22 @@ msgstr "Impossibile partecipare"
 msgid "Could not update"
 msgstr "Impossibile aggiornare"
 
-#: lib/oggi_web/live/poll_live/new.ex:133
+#: lib/oggi_web/live/poll_live/new.ex:136
 #, elixir-autogen, elixir-format
 msgid "Create a poll. Friends mark when they can't. The rest is magic."
 msgstr "Crea un sondaggio. Gli amici segnano quando non possono. Il resto è magia."
 
-#: lib/oggi_web/live/poll_live/new.ex:196
+#: lib/oggi_web/live/poll_live/new.ex:207
 #, elixir-autogen, elixir-format
 msgid "Create poll"
 msgstr "Crea sondaggio"
 
-#: lib/oggi_web/live/poll_live/new.ex:130
+#: lib/oggi_web/live/poll_live/new.ex:133
 #, elixir-autogen, elixir-format
 msgid "Find a time"
 msgstr "Trova un orario"
 
-#: lib/oggi_web/live/poll_live/new.ex:152
+#: lib/oggi_web/live/poll_live/new.ex:155
 #, elixir-autogen, elixir-format
 msgid "How long? (minutes)"
 msgstr "Quanto dura? (minuti)"
@@ -126,7 +126,7 @@ msgstr "Troverà lo slot migliore e chiuderà il sondaggio. Procedere?"
 msgid "We have a winner!"
 msgstr "Abbiamo un vincitore!"
 
-#: lib/oggi_web/live/poll_live/new.ex:140
+#: lib/oggi_web/live/poll_live/new.ex:143
 #, elixir-autogen, elixir-format
 msgid "What's the occasion?"
 msgstr "Qual è l'occasione?"
@@ -141,13 +141,13 @@ msgstr "Vincitore"
 msgid "You can't"
 msgstr "Non puoi"
 
-#: lib/oggi_web/live/poll_live/new.ex:146
+#: lib/oggi_web/live/poll_live/new.ex:149
 #: lib/oggi_web/live/poll_live/show.ex:256
 #, elixir-autogen, elixir-format
 msgid "Your name"
 msgstr "Il tuo nome"
 
-#: lib/oggi_web/live/poll_live/new.ex:147
+#: lib/oggi_web/live/poll_live/new.ex:150
 #, elixir-autogen, elixir-format
 msgid "e.g. Marco"
 msgstr "es. Marco"
@@ -161,13 +161,6 @@ msgstr "qualcuno"
 #, elixir-autogen, elixir-format
 msgid "%{count} participants so far"
 msgstr "%{count} partecipanti finora"
-
-#: lib/oggi_web/live/poll_live/new.ex:185
-#, elixir-autogen, elixir-format
-msgid "%{count} slot"
-msgid_plural "%{count} slots"
-msgstr[0] "%{count} slot"
-msgstr[1] "%{count} slot"
 
 #: lib/oggi_web/live/poll_live/show.ex:234
 #, elixir-autogen, elixir-format
@@ -189,7 +182,7 @@ msgstr "Inserisci il tuo nome, poi segna gli slot quando NON sei disponibile. L'
 msgid "How does it work?"
 msgstr "Come funziona?"
 
-#: lib/oggi_web/live/poll_live/new.ex:160
+#: lib/oggi_web/live/poll_live/new.ex:161
 #, elixir-autogen, elixir-format
 msgid "When?"
 msgstr "Quando?"
@@ -199,7 +192,57 @@ msgstr "Quando?"
 msgid "You've been invited!"
 msgstr "Sei stato invitato!"
 
-#: lib/oggi_web/live/poll_live/new.ex:190
+#: lib/oggi_web/live/poll_live/new.ex:114
 #, elixir-autogen, elixir-format
-msgid "to"
-msgstr "a"
+msgid "Afternoon"
+msgstr "Pomeriggio"
+
+#: lib/oggi_web/live/poll_live/new.ex:115
+#, elixir-autogen, elixir-format
+msgid "Evening"
+msgstr "Sera"
+
+#: lib/oggi_web/live/poll_live/new.ex:113
+#, elixir-autogen, elixir-format
+msgid "Morning"
+msgstr "Mattina"
+
+#: lib/oggi_web/live/poll_live/new.ex:110
+#, elixir-autogen, elixir-format
+msgid "Next month"
+msgstr "Prossimo mese"
+
+#: lib/oggi_web/live/poll_live/new.ex:106
+#, elixir-autogen, elixir-format
+msgid "Next week"
+msgstr "Prossima settimana"
+
+#: lib/oggi_web/live/poll_live/new.ex:108
+#, elixir-autogen, elixir-format
+msgid "Next weekend"
+msgstr "Prossimo fine settimana"
+
+#: lib/oggi_web/live/poll_live/new.ex:109
+#, elixir-autogen, elixir-format
+msgid "This month"
+msgstr "Questo mese"
+
+#: lib/oggi_web/live/poll_live/new.ex:105
+#, elixir-autogen, elixir-format
+msgid "This week"
+msgstr "Questa settimana"
+
+#: lib/oggi_web/live/poll_live/new.ex:107
+#, elixir-autogen, elixir-format
+msgid "This weekend"
+msgstr "Questo fine settimana"
+
+#: lib/oggi_web/live/poll_live/new.ex:111
+#, elixir-autogen, elixir-format
+msgid "Tomorrow"
+msgstr "Domani"
+
+#: lib/oggi_web/live/poll_live/new.ex:185
+#, elixir-autogen, elixir-format
+msgid "What time?"
+msgstr "A che ora?"
